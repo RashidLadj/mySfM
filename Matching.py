@@ -40,7 +40,7 @@ class Matching:
             # matches = sorted(matches, key = lambda x:x.distance)
 
             # Draw All matches.
-            Result = cv.drawMatches(image_A.imageRGB, image_A.keyPoints, image_B.imageRGB, image_B.keyPoints, matches, None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+            image_matches = cv.drawMatches(image_A.imageRGB, image_A.keyPoints, image_B.imageRGB, image_B.keyPoints, matches, None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
 
         else:
             # Methode Two
@@ -54,13 +54,12 @@ class Matching:
             matches = [item[0] for item in good]
 
             # Draw All matches.
-            Result = cv.drawMatchesKnn(image_A.imageRGB, image_A.keyPoints, image_B.imageRGB, image_B.keyPoints,good, None, flags=2)
+            image_matches = cv.drawMatchesKnn(image_A.imageRGB, image_A.keyPoints, image_B.imageRGB, image_B.keyPoints,good, None, flags=2)
         
         # Sort them in the order of their distance.
         # matches = sorted(matches, key = lambda x:x.distance)
 
-        # return matches and image_matches
-        return matches, Result    
+        return matches, image_matches    
 
 
     def __permuteValue(self, item):
@@ -137,7 +136,7 @@ class Matching:
     ####################################################################
     ##       ''' Retrieve matches Symmetricly and take union '''      ##
     ####################################################################
-    def MatchingUnion(self, image_A, image_B):
+    def __MatchingUnion(self, image_A, image_B):
         if self.crosscheck:
                 # Methode One
             ''' Match Img A to img B '''
@@ -191,7 +190,6 @@ class Matching:
 
         # Matching 
         good_Without_Optimizer = len(unionMatches)
-        Result = cv.drawMatches(image_A.imageRGB, image_A.keyPoints, image_B.imageRGB, image_B.keyPoints,goodUnion, None, flags=2) if self.crosscheck else cv.drawMatchesKnn(image_A.imageRGB, image_A.keyPoints, image_B.imageRGB, image_B.keyPoints,goodUnionKnn, None, flags=2)
+        image_matches = cv.drawMatches(image_A.imageRGB, image_A.keyPoints, image_B.imageRGB, image_B.keyPoints,goodUnion, None, flags=2) if self.crosscheck else cv.drawMatchesKnn(image_A.imageRGB, image_A.keyPoints, image_B.imageRGB, image_B.keyPoints,goodUnionKnn, None, flags=2)
 
-        # return matches and image_matches
-        return unionMatches, Result   
+        return unionMatches, image_matches   

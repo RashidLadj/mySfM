@@ -11,6 +11,10 @@ class Image:
         self.image_height, self.image_width = self.imageRGB.shape[:2]
         self.keyPoints = None
         self.des = None
+        # used in Point_Cloud
+        self.points_2D_used  = []
+        self.descriptor_used = []
+        self.points_3D_used  = []
 
 
     def show_image(image):
@@ -26,7 +30,6 @@ class Image:
             h, w = img.shape[:2]
             if h>sizeValue and w>sizeValue:
                 img = self.__image_resize(img, width  = sizeValue, height = sizeValue) 
-                print("On est la")
             elif h>w and h>sizeValue:
                 img = self.__image_resize(img, height = sizeValue)
             elif w>h and h>sizeValue: 
@@ -41,7 +44,8 @@ class Image:
     def keyPointDetector(self, detector):
         # find the keypoints and descriptors with detector ( sift, surf, orb)
         self.keyPoints, self.des = detector.detectAndCompute(self.imageGray,None)
-        self.points = np.float32([ keyPoint.pt for keyPoint in self.keyPoints ]).reshape(-1,2)
+        #Not used
+        # self.points = np.around(np.float32([ keyPoint.pt for keyPoint in self.keyPoints ]).reshape(-1,2), decimals=0)
             
 
     ######################################################################################
