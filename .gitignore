@@ -1,6 +1,7 @@
 # My files and folders
 .DS_Store
 Json_Files/
+NO_ADD/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
