@@ -25,7 +25,7 @@ from EssentialMatEstimation import *
 configuration = default_config()
 
 
-ImageFolder = "Imgs/"
+ImageFolder = "Images/"
 assert path.exists(ImageFolder), 'veuillez verifier le chemin du Folder'
 images_name = sorted([f for f in listdir(ImageFolder)])
 
@@ -57,25 +57,6 @@ for image in Images:
     print ('  size of descriptors of', image.id, image.des.shape)
     
 
-
-###########################################################
-##   ''' Save keypoint and Descriptor in Json File  '''  ##
-###########################################################
-# Features_data = {}
-# Features_data['FeaturePoints'] = []
-# for image in Images:
-#     Features_data['FeaturePoints'].append({
-#         'ID_img': image.id,
-#         'features': [{"Px" : json.dumps(str(point[0])), "Py" : json.dumps(str(point[1])), "desc" : json.dumps(desc.tolist(), separators=(',', ':'))} for point, desc in zip (image.points, image.des)]
-#     })
-
-# if not path.exists("Json_Files/"):
-#     os.mkdir("Json_Files/")
-
-# with open('Json_Files/Features_data.json', 'w', encoding='utf-8') as outfile:
-#     json.dump(Features_data, outfile)
-
-
 ###########################################################
 ##             ''' Matching configuration '''            ##
 ###########################################################
@@ -90,10 +71,7 @@ print ("    ", configuration["symmetric_matching"], configuration["symmetric_mat
 print ("\nMatching points beetwin each pair of image")
 
 image_Pair = list(itertools.combinations(Images, 2))
-#
-# Matching_data = {}
-# Matching_data['MatchingPoints'] = []
-#
+
 matches_vector = []
 for image_A, image_B in image_Pair:
     matches, image_result = matching.match(image_A, image_B)
@@ -108,31 +86,14 @@ for image_A, image_B in image_Pair:
 print ("\nRetrieve best candidate pair for initialization")
 
 index_candidate_pair = np.argmax([len (x[2]) for x in matches_vector])
+index_candidate_pair = 0                            # temporary value 
 image_A, image_B, matches_AB = matches_vector[index_candidate_pair]
 matches_vector.pop(index_candidate_pair)
 print ("\tBest candidate pair for initialization is (",image_A.id, ",", image_B.id, ") with ", len(matches_AB), "matches")
-src_pts  = np.around(np.float32([ image_A.keyPoints[m.queryIdx].pt for m in matches_AB ]).reshape(-1,2))
+src_pts  = np.around(np.float32([ image_A.keyPoints[m.queryIdx].pt for m in matches_AB ]).reshape(-1, 2))
 src_desc = [ image_A.des[m.queryIdx] for m in matches_AB ]
-dst_pts  = np.around(np.float32([ image_B.keyPoints[m.trainIdx].pt for m in matches_AB ]).reshape(-1,2))
-dst_desc = [ image_B.des[m.trainIdx] for m in matches_AB ]   
-
-###################################################################
-## ''' Save Matching (Keypoint and descriptor used)Json File ''' ##
-###################################################################
-# points_A = [{"Px" : json.dumps(str(point[0])), "Py" : json.dumps(str(point[1])), "desc" : json.dumps(desc.tolist(), separators=(',', ':'))} for point, desc in zip (src_pts, src_desc)]
-# points_B = [{"Px" : json.dumps(str(point[0])), "Py" : json.dumps(str(point[1])), "desc" : json.dumps(desc.tolist(), separators=(',', ':'))} for point, desc in zip (dst_pts, dst_desc)]
-
-# Matching_data['MatchingPoints'].append({
-#     'ID_Matching': "match_" + image_A.id + "_" + image_B.id,
-#     'number_matches': len(matches),
-#     'matches': [ {"ID_img": image_A.id, "features_Points" : points_A} , {"ID_img": image_B.id, "features_Points" : points_B} ]
-# })
-
-# if not path.exists("Json_Files/"):
-#     os.mkdir("Json_Files/")
-
-# with open('Json_Files/Matching_data.json', 'w', encoding='utf-8') as outfile:
-#     json.dump(Matching_data, outfile)            
+dst_pts  = np.around(np.float32([ image_B.keyPoints[m.trainIdx].pt for m in matches_AB ]).reshape(-1, 2))
+dst_desc = [ image_B.des[m.trainIdx] for m in matches_AB ]            
 
 
 ###########################################################
@@ -151,7 +112,6 @@ ComputeCameraMatrix(CameraMatrix, Images[0])
 #######################################################
 ''' toutes les images ont la même résolution et sont prises par mon sumsung S7 '''
 DistortionCoef = None
-# print ("\nCamera Matrix : \n", CameraMatrix)
 
 
 #############################################################
@@ -193,27 +153,25 @@ dst_pts_inliers_E   = dst_pts_inliers_F[maskInliers_E.ravel() == 1]
 dst_desc_inliers_E  = [ desc  for desc, i in zip (dst_desc_inliers_F, np.arange(len(src_pts_inliers_F))) if maskInliers_E[i] == 1]
 print ("    Matching points beetwin", image_A.id, "and",  image_B.id, "--> Number of Matches (EssentialMatrix_inliers) ==", len(src_pts_inliers_E))
 
-# points_A = [{"Px" : json.dumps(str(point[0])), "Py" : json.dumps(str(point[1])), "desc" : json.dumps(desc.tolist(), separators=(',', ':'))} for point, desc in zip (src_pts, src_desc)]
-# points_B = [{"Px" : json.dumps(str(point[0])), "Py" : json.dumps(str(point[1])), "desc" : json.dumps(desc.tolist(), separators=(',', ':'))} for point, desc in zip (dst_pts, dst_desc)]
-
-# Matching_data['MatchingPoints_OptimizeEssensial'].append({
-#     'ID_Matching': "match_" + image_A.id + "_" + image_B.id,
-#     'number_matches': len(matches),
-#     'matches': [ {"ID_img": image_A.id, "features_Points" : points_A} , {"ID_img": image_B.id, "features_Points" : points_B} ]
-# })
-
-# if not path.exists("Json_Files/"):
-#     os.mkdir("Json_Files/")
-
-# with open('Json_Files/Matching_data.json', 'w', encoding='utf-8') as outfile:
-#     json.dump(Matching_data, outfile)        
-
 
 ###########################################################
 ##      ''' Retrieve Transformation of Image_B '''       ##
 ###########################################################
 print ("\nRetrieve Transformation of Image_B")
 points, Rot_RP, Transl_RP, mask_RP = Essentialmat.RecoverPose_3D_Points(EssentialMat = EssentialMat, src_pts = src_pts_inliers_E, dst_pts = dst_pts_inliers_E)
+
+rVec, _ = cv.Rodrigues(Rot_RP.T)
+tVec = np.dot(-Rot_RP.T,Transl_RP)
+
+''' relative Pose '''
+image_A.setRelativePose(image_A, np.eye(3, 3), np.zeros(3), np.zeros(3), np.zeros(3))
+image_B.setRelativePose(image_A, Rot_RP, Transl_RP, rVec, tVec)
+
+''' Absolute Pose '''
+image_A.setAbsolutePose(np.eye(3, 3), np.ones(3), np.zeros(3), np.zeros(3))
+image_B.setAbsolutePose(Rot_RP, Transl_RP, rVec, tVec)
+
+
 # Update inliers points and descriptors
 src_pts_inliers_RP   = src_pts_inliers_E[mask_RP.ravel() == 255]
 src_desc_inliers_RP  = [ desc  for desc, i in zip (src_desc_inliers_E, np.arange(len(src_pts_inliers_E))) if mask_RP[i] == 255]
@@ -228,14 +186,8 @@ print ("    Matching points beetwin", image_A.id, "and",  image_B.id, "--> Numbe
 print ("\nGenerate 3D_points using Triangulation\n")
 points3d, index_to_Remove, = Essentialmat.Triangulate(Rot_RP, Transl_RP, src_pts_inliers_RP, dst_pts_inliers_RP)
 
-# # JUST TEST #
-# rvec2, _ = cv.Rodrigues(Rot_RP.T)
-# tvec2 = np.dot(-Rot_RP.T,Transl_RP)
-
-# p1, _ = cv.projectPoints(np.asarray(points3d).T, rvec2, tvec2, CameraMatrix, distCoeffs=None)
-# reprojection_error1 = np.linalg.norm(np.array(dst_pts_inliers_RP).reshape(-1, 2) - p1.reshape(-1, 2)) / len(p1)
-# print("    \nReprojection Error Image_BB --> ", reprojection_error1)
-# # END TEST #
+print ("Rotation de l'image 2 par rapport à l'mage 1 \n", Rot_RP)
+print ("Translation de l'image 2 par rapport à l'image 1\n", Transl_RP)
 
 # Update inliers points and descriptors
 points3d_F         = np.delete(points3d            , index_to_Remove, axis=0).tolist()
@@ -253,22 +205,16 @@ image_B.points_2D_used  = dst_pts_inliers_F
 image_B.descriptor_used = dst_desc_inliers_F
 image_B.points_3D_used  = points3d_F
 
-###########################################################
-##       ''' Config params of Essential Matrix '''       ##
-###########################################################
-# for data in Matching_data['MatchingPoints']:
-#     print (data['ID_Matching'])
-#     [print ("\t" + image['ID_img']) for image in data['matches']]
-
-#     # matches_ = data['matches']
-
-# [print (data['number_matches'])   for data in Matching_data['MatchingPoints']
+POINT_DRAW = points3d_F
 
 
 
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-'''                INCREMENTAL PHASE                 '''               
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''                 
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''''''''             INCREMENTAL PHASE              '''''''''          
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+              
 ###############################################################
 ##  ''' Retrieve best candidate pair for incremetal phase '''  ##
 ###############################################################
@@ -293,26 +239,7 @@ if(image_B.points_2D_used != [] and image_A.points_2D_used == []):
     # il faut les permuter
     image_A, image_B = image_B, image_A
     src_pts, dst_pts = dst_pts, src_pts
-    src_desc, dst_desc, dst_desc, src_desc
-
-
-###################################################################
-## ''' Save Matching (Keypoint and descriptor used)Json File ''' ##
-###################################################################
-    # points_A = [{"Px" : json.dumps(str(point[0])), "Py" : json.dumps(str(point[1])), "desc" : json.dumps(desc.tolist(), separators=(',', ':'))} for point, desc in zip (src_pts, src_desc)]
-    # points_B = [{"Px" : json.dumps(str(point[0])), "Py" : json.dumps(str(point[1])), "desc" : json.dumps(desc.tolist(), separators=(',', ':'))} for point, desc in zip (dst_pts, dst_desc)]
-
-    # Matching_data['MatchingPoints'].append({
-    #     'ID_Matching': "match_" + image_A.id + "_" + image_B.id,
-    #     'number_matches': len(matches),
-    #     'matches': [ {"ID_img": image_A.id, "features_Points" : points_A} , {"ID_img": image_B.id, "features_Points" : points_B} ]
-    # })
-
-    # if not path.exists("Json_Files/"):
-    #     os.mkdir("Json_Files/")
-
-    # with open('Json_Files/Matching_data.json', 'w', encoding='utf-8') as outfile:
-    #     json.dump(Matching_data, outfile)            
+    src_desc, dst_desc, dst_desc, src_desc          
 
 
 #############################################################
@@ -332,29 +259,95 @@ print ("    Matching points beetwin", image_A.id, "and",  image_B.id, "--> Numbe
 ##              ''' Intersection 3D 2D '''               ##
 ##                ''' Filter Matching '''                ##
 ###########################################################
-
 pointIntersection, index_A, index_B = intersect2D(np.around(np.asarray(image_A.points_2D_used), decimals=0), np.around(np.asarray(src_pts_inliers_F), decimals=0)) 
-''' je dois garder les indices dans l'ordre '''
+
 pt_1  = [image_A.points_2D_used[i] for i in index_A]
 pt_3D = [image_A.points_3D_used[i] for i in index_A]
 pt_2  = [src_pts_inliers_F[i]      for i in index_B]
+ 
+New_points_2DTO_3D_src = np.delete(src_pts_inliers_F , index_B, axis=0)
+New_points_2DTO_3D_dst = np.delete(dst_pts_inliers_F , index_B, axis=0)
 
 print(" Le nombre de points 3D à projeter ", len(pointIntersection))
-# [print (a, b, c) for a,b,c in zip(pt_1, pt_2, pt_3D)]
+
 
 ###########################################################
 ##      ''' Retrieve Transformation of Image_B '''       ##
 ###########################################################
-_, rVec, tVec = cv.solvePnP(np.array(pt_3D).reshape(-1, 1, 3), np.array(pt_2).reshape(-1, 1, 2), CameraMatrix, None)
+_, absolute_rVec, absolute_tVec = cv.solvePnP(np.array(pt_3D).reshape(-1, 1, 3), np.array(pt_2).reshape(-1, 1, 2), CameraMatrix, None)
 
-p1, _ = cv.projectPoints(np.array(pt_3D).T, rVec, tVec, CameraMatrix, distCoeffs=None)
-reprojection_error1 = np.linalg.norm(np.array(pt_2).reshape(-1, 2) - p1.reshape(-1, 2)) / len(p1)
-print("    \nReprojection Error Image_A --> ", reprojection_error1)
+""" Reprojection Error """
+# p1, _ = cv.projectPoints(np.array(pt_3D).T, absolute_RVec, absolute_TVec, CameraMatrix, distCoeffs=None)
+# reprojection_error1 = np.linalg.norm(np.array(pt_2).reshape(-1, 2) - p1.reshape(-1, 2)) / len(p1)
+# print("    \nReprojection Error Image_A --> ", reprojection_error1)
+
+absolute_Rt, _ = cv.Rodrigues(absolute_rVec)
+absolute_R_ = np.asarray(absolute_Rt.T)
+absolute_t_ = -np.dot(np.linalg.inv(absolute_Rt) , np.asarray(absolute_tVec))
+
+relative_tVec = absolute_tVec - image_A.absoluteTransformation["tVec"]
+relative_rVec = None
+
+relative_R = np.linalg.inv(image_A.absoluteTransformation["rotation"]) @ absolute_R_
+relative_t = - np.linalg.inv(relative_R.T) @ np.asarray(relative_tVec)
+
+''' relative Pose '''
+# image_A.setRelativePose(image_A, np.eye(3, 3), np.zeros(3), np.zeros(3), np.zeros(3))
+image_B.setRelativePose(image_A, relative_R, relative_t, relative_rVec, relative_tVec)
+
+''' Absolute Pose '''
+# image_A.setAbsolutePose(np.eye(3, 3), np.ones(3), np.zeros(3), np.zeros(3))
+image_B.setAbsolutePose(absolute_R_, absolute_t_, absolute_rVec, absolute_tVec)
 
 
-Rt, _ = cv.Rodrigues(rVec)
-R_ = np.asarray(Rt.T)
-print ("Rotation Image 3  --> \n", R_)
-t_ = -np.dot(np.linalg.inv(Rt) , np.asarray(tVec))
-print ("Rotation Image 3  --> \n", t_)
+print ("Rotation de l'image 3 par rapport à un référenciel    (Image 1) \n", absolute_R_)
+print ("translation de l'image 3 par rapport à un référenciel (Image 1)\n", absolute_t_)
 
+
+###########################################################
+##    ''' Generate 3D_points using Triangulation '''     ##
+###########################################################
+print ("\nGenerate 3D_points using Triangulation\n")
+points3d, index_to_Remove, = Essentialmat.Triangulate(relative_R, relative_t, New_points_2DTO_3D_src, New_points_2DTO_3D_dst)
+
+# # JUST TEST #
+# rvec2, _ = cv.Rodrigues(Rot_RP.T)
+# tvec2 = np.dot(-Rot_RP.T,Transl_RP)
+
+# p1, _ = cv.projectPoints(np.asarray(points3d).T, rvec2, tvec2, CameraMatrix, distCoeffs=None)
+# reprojection_error1 = np.linalg.norm(np.array(dst_pts_inliers_RP).reshape(-1, 2) - p1.reshape(-1, 2)) / len(p1)
+# print("    \nReprojection Error Image_BB --> ", reprojection_error1)
+# # END TEST #
+
+# Update inliers points and descriptors
+points3d_F         = np.delete(points3d            , index_to_Remove, axis=0).tolist()
+src_pts_inliers_F  = np.delete(src_pts_inliers_RP  , index_to_Remove, axis=0).tolist()
+src_desc_inliers_F = np.delete(src_desc_inliers_RP , index_to_Remove, axis=0).tolist()
+dst_pts_inliers_F  = np.delete(dst_pts_inliers_RP  , index_to_Remove, axis=0).tolist()
+dst_desc_inliers_F = np.delete(dst_desc_inliers_RP , index_to_Remove, axis=0).tolist()
+
+image_A.points_2D_used = np.append(image_A.points_2D_used, src_pts_inliers_F, axis = 0)
+image_A.descriptor_used = np.append(image_A.descriptor_used, src_desc_inliers_F, axis = 0)
+image_A.points_3D_used = np.append(image_A.points_3D_used, points3d_F, axis = 0)
+
+image_B.points_2D_used  = dst_pts_inliers_F
+image_B.descriptor_used = dst_desc_inliers_F
+image_B.points_3D_used  = pt_3D
+image_A.points_3D_used = np.append(image_A.points_3D_used, points3d_F, axis = 0)
+
+
+POINT_DRAW = np.append(POINT_DRAW, points3d_F, axis = 0)
+###########################################################
+##  ''' Recuprer tous les points 3D et les afficher '''  ##
+###########################################################
+print ("la nouvelle liste contient ",len(POINT_DRAW), "points 3D")
+
+import open3d as o3d
+vis = o3d.visualization.Visualizer()
+vis.create_window()
+
+pcd = o3d.geometry.PointCloud()
+pcd.points = o3d.utility.Vector3dVector(POINT_DRAW)
+vis.add_geometry(pcd)
+
+vis.run()

@@ -17,9 +17,15 @@ def intersect2D(Array_A, Array_B):
   IndexEqual = np.asarray([(i, j, tuple(x)) for i,x in enumerate(Array_A) for j, y in enumerate (Array_B) if( tuple(x) == tuple(y) )])
 
 
-  idx = IndexEqual[:, 0] if len(IndexEqual) != 0 else []
-  idy = IndexEqual[:, 1] if len(IndexEqual) != 0 else []
+  idx = IndexEqual[:, 0].astype(int) if len(IndexEqual) != 0 else []
+  idy = IndexEqual[:, 1].astype(int) if len(IndexEqual) != 0 else []
 
   intersectionList = IndexEqual[:, 2] if len(IndexEqual) != 0 else []
 
   return intersectionList, idx, idy
+
+
+#####################################################################################################################################
+##                                               reprjection Error Formula                                                         ##
+## https://stackoverflow.com/questions/23781089/opencv-calibratecamera-2-reprojection-error-and-custom-computed-one-not-agree?rq=1 ##
+#####################################################################################################################################

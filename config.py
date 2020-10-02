@@ -4,14 +4,14 @@ import yaml
 default_config_yaml = '''
 # Params for features
 feature_type: ORB                       # Feature type (SURF, SIFT, ORB, AKAZE)
-max_keyPoint: 200000
-feature_process_size: 2048              # Resize the image if its size is larger than specified. Set to -1 for original size
+max_keyPoint: 20000
+feature_process_size: 1024              # Resize the image if its size is larger than specified. Set to -1 for original size
 
 # Params for general matching
 lowes_ratio: 0.75                        # Ratio test for matches
 matcher_type: BFMatcher                # FlannMatcher, BFMatcher
-matcher_crosscheck: False                 # True (match) or False (knnmatch)
-symmetric_matching: True                # Match symmetricly or one-way
+matcher_crosscheck: True                 # True (match) or False (knnmatch)
+symmetric_matching: False                # Match symmetricly or one-way
 symmetric_matching_type: intersection   # intersection or union
 
 # Params Fundamental_Matrix --> >= 5 points

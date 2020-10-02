@@ -11,10 +11,14 @@ class Image:
         self.image_height, self.image_width = self.imageRGB.shape[:2]
         self.keyPoints = None
         self.des = None
+        # Pose Estimation
+        self.relativeTransformation = {"img": None, "rotation": None, "translation": None}
+        self.absoluteTransformation = {"rotation": None, "translation": None}
         # used in Point_Cloud
         self.points_2D_used  = []
         self.descriptor_used = []
         self.points_3D_used  = []
+        
 
 
     def show_image(image):
@@ -52,32 +56,47 @@ class Image:
     ## ''' Redimentionner l'image en gardant le Ratio , Choix du Width ou du Height ''' ##
     ######################################################################################
     def __image_resize(self, image, width = None, height = None, inter = cv.INTER_AREA):
-            # initialize the dimensions of the image to be resized and
-            # grab the image size
-            dim = None
-            (h, w) = image.shape[:2]
+        # initialize the dimensions of the image to be resized and
+        # grab the image size
+        dim = None
+        (h, w) = image.shape[:2]
 
-            # if both the width and height are None, then return the
-            # original image
-            if width is None and height is None:
-                return image
+        # if both the width and height are None, then return the
+        # original image
+        if width is None and height is None:
+            return image
 
-            # check to see if the width is None
-            if width is None:
-                # calculate the ratio of the height and construct the
-                # dimensions
-                r = height / float(h)
-                dim = (int(w * r), height)
+        # check to see if the width is None
+        if width is None:
+            # calculate the ratio of the height and construct the
+            # dimensions
+            r = height / float(h)
+            dim = (int(w * r), height)
 
-            # otherwise, the height is None
-            else:
-                # calculate the ratio of the width and construct the
-                # dimensions
-                r = width / float(w)
-                dim = (width, int(h * r))
+        # otherwise, the height is None
+        else:
+            # calculate the ratio of the width and construct the
+            # dimensions
+            r = width / float(w)
+            dim = (width, int(h * r))
 
-            # resize the image
-            resized = cv.resize(image, dim, interpolation = inter)
+        # resize the image
+        resized = cv.resize(image, dim, interpolation = inter)
 
-            # return the resized image
-            return resized
+        # return the resized image
+        return resized
+    
+
+    def setRelativePose(self, Image, Rot, Trans, rVec, tVec):
+        self.relativeTransformation["img"] = Image
+        self.relativeTransformation["rotation"] = Rot
+        self.relativeTransformation["translation"] = Trans
+        self.relativeTransformation["rVec"] = rVec
+        self.relativeTransformation["tVec"] = tVec
+
+
+    def setAbsolutePose(self, Rot, Trans, rVec, tVec):
+        self.absoluteTransformation["rotation"] = Rot
+        self.absoluteTransformation["translation"] = Trans
+        self.absoluteTransformation["rVec"] = rVec
+        self.absoluteTransformation["tVec"] = tVec

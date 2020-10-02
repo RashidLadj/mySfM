@@ -133,7 +133,7 @@ class EssentialMatrix:
             # Triangulation
             points4dHomogeneous = cv.triangulatePoints(P1, P2, src_pts.copy().reshape(-1, 1, 2), dst_pts.copy().reshape(-1, 1, 2))
             points3d = cv.convertPointsFromHomogeneous(points4dHomogeneous.T).reshape(-1,3)  
-            print ("lami ", len(points3d), len(src_pts))
+
         ###################################################
         ## check if reprojected point has positive depth ##
         ###################################################

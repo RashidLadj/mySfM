@@ -37,7 +37,7 @@ class Matching:
             # Methode One
             matches = self.matcher.match(image_A.des, image_B.des)
             # take just 2/3 ?? (A revoir)
-            # matches = sorted(matches, key = lambda x:x.distance)
+            matches = sorted(matches, key = lambda x:x.distance)
 
             # Draw All matches.
             image_matches = cv.drawMatches(image_A.imageRGB, image_A.keyPoints, image_B.imageRGB, image_B.keyPoints, matches, None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
