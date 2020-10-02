@@ -1,0 +1,5 @@
+numpy==1.19.2
+open3d==0.10.0.0
+opencv-contrib-python==4.4.0.44
+opencv-python==4.4.0.44
+PyYAML==5.3.1
