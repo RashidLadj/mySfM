@@ -7,7 +7,6 @@ def parse_requirements(filename):
     return [line for line in lineiter if line and not line.startswith("#")]
 
 install_reqs = parse_requirements('requirements.txt')
-# reqs = [str(ir.req) for ir in install_reqs]
 
 
 setup(

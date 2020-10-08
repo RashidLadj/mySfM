@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+from Utils import *
 
 class Image:
     def __init__(self, pathFolder, fileName, maxWH = None):
@@ -12,8 +13,8 @@ class Image:
         self.keyPoints = None
         self.des = None
         # Pose Estimation
-        self.relativeTransformation = {"img": None, "rotation": None, "translation": None}
-        self.absoluteTransformation = {"rotation": None, "translation": None}
+        self.relativeTransformation = {}
+        self.absoluteTransformation = {}
         # used in Point_Cloud
         self.points_2D_used  = []
         self.descriptor_used = []
@@ -87,16 +88,15 @@ class Image:
         return resized
     
 
-    def setRelativePose(self, Image, Rot, Trans, rVec, tVec):
+    def setRelativePose(self, Image, Rot, Trans):
         self.relativeTransformation["img"] = Image
         self.relativeTransformation["rotation"] = Rot
         self.relativeTransformation["translation"] = Trans
-        self.relativeTransformation["rVec"] = rVec
-        self.relativeTransformation["tVec"] = tVec
+        self.relativeTransformation["transform"] = poseRt(Rot, Trans)
 
 
-    def setAbsolutePose(self, Rot, Trans, rVec, tVec):
+    def setAbsolutePose(self, Rot, Trans):
         self.absoluteTransformation["rotation"] = Rot
         self.absoluteTransformation["translation"] = Trans
-        self.absoluteTransformation["rVec"] = rVec
-        self.absoluteTransformation["tVec"] = tVec
+        self.absoluteTransformation["transform"] = poseRt(Rot, Trans)
+        self.absoluteTransformation["projection"] = projection_from_transformation(poseRt(Rot, Trans))
