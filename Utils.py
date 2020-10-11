@@ -56,7 +56,6 @@ def poseRt(Rot, transl):
     """ Transformation matrix (Homogenous)  """
     trans = np.eye(4)
     trans[:3, :3] = Rot[:3, :3]
-    print (transl.reshape(-1))
     trans[:3, 3]  = transl.reshape(-1)
 
     return trans
@@ -82,3 +81,10 @@ def current_relative_transform(current_absolute_transform, precedent_absolute_tr
     # transform_AC = transform_BC @ transform_AB
     # ==> transform_BC = transform_AC * inv(transform_AB)
     return current_absolute_transform @ inv_poseRt(precedent_absolute_transform)
+
+
+################## From solvePNP ###########################
+# Projection = np.concatenate(cv.rodriges(rvec)[0], tvec)  #
+# Rot.T = cv.rodriges(rvec)[0]                             # 
+# - Rot.T * transl = tvec                                  #
+#############################################################

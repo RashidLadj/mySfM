@@ -1,76 +1,56 @@
 import cv2 as cv
 import numpy as np
 
+from config import *
+
+
+#########################################################################################################
+## Source:                                                                                             ##
+## - https://www.programcreek.com/python/?code=zju3dv%2FGIFT%2FGIFT-master%2Ftrain%2Fevaluation.py#    ##
+##   For 2 camera                                                                                      ##
+#########################################################################################################
+
 
 class EssentialMatrix:
-    def __init__(self, methodOptimizer = cv.RANSAC, threshold = 3.0, CameraMatrixArray = np.identity(3)):
+    def __init__(self, methodOptimizer = cv.RANSAC, threshold = 3.0):
         self.methodOptimizer = methodOptimizer
-        self.threshold = threshold
-        self.CameraMatrixArray = CameraMatrixArray
+        self.threshold = threshold 
+        ## If Two Cameras are used : -> Undistore points --> k= Identity ##
 
 
     #####################################################################
     ## NOTE: Pose is calculated from dst to src so it's the same for E ##
+    ## If points aren't undistort --> Use K = cameraMatrix                 ##
+    ## If points are undistort    --> Use K = Identity Matrix              ##
     #####################################################################
-    def compute_EssentialMatrix (self, src_pts, dst_pts):
+    def compute_EssentialMatrix (self, matching):
+
         NB_Matching_Threshold = 5
-        if len(src_pts) >= NB_Matching_Threshold:
+        if len(matching.matches) >= NB_Matching_Threshold:
+            focal_avg = (matching.image_A.cameraMatrix[0][0] + matching.image_B.cameraMatrix[0][0]) / 2
+            if (np.array_equal(matching.image_A.cameraMatrix, matching.image_B.cameraMatrix)): 
+                ## Same Result ##
+                if(configuration["undistort_point"]):
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts_norm, matching.src_pts_norm, np.eye(3), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold / matching.image_A.cameraMatrix[0][0], mask = matching.inliers_mask) 
+                else:    
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts, matching.src_pts, matching.image_A.cameraMatrix, method = self.methodOptimizer, prob = 0.999, threshold = self.threshold, mask = matching.inliers_mask) 
 
-            ''' Methode 1 -->  Without normalize  points [-1, 1] '''
-            self.EssentialMat, maskInliers = cv.findEssentialMat(dst_pts, src_pts, self.CameraMatrixArray, method = self.methodOptimizer, prob = 0.999, threshold = self.threshold) 
+            else:
+                ## Same Result ##
+                if cv.__version__ >= '4.5.0':
+                    ## New Method will be integrate in next  release of OpenCV##
+                    """https://docs.opencv.org/master/d9/d0c/group__calib3d.html#gafafd52c0372b12dd582597bfb1330430"""
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts, matching.src_pts, cameraMatrix1 = matching.image_B.cameraMatrix, cameraMatrix2 = matching.image_A.cameraMatrix, method = self.methodOptimizer, prob = 0.999, threshold = self.threshold, mask = matching.inliers_mask) 
 
-            # ''' Methode 2 -->  Without normalize points [-1, 1] --> A eviter si focalX != focalY  ''' 
-            # principalPoint = (self.CameraMatrixArray[0][2], self.CameraMatrixArray[1][2])
-            # focalx = self.CameraMatrixArray[0][0]
-            # EssentialMat, maskInliers = cv.findEssentialMat(self.dst_pts, self.dst_pts, focal = focalx, pp = principalPoint, method = self.methodOptimizer, prob = 0.999, threshold = self.threshold)
-
-            # ''' Methode 3 -->  UndistordPoints and normalize points [-1, 1]  '''
-            # # Bizarrre .... 
-            # self.NormalizePoint()
-            # EssentialMat, maskInliers = cv.findEssentialMat(self.dst_ptsNorm, self.dst_ptsNorm, focal = 1., pp = (0., 0.), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold)
-        
+                else:
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts_norm, matching.src_pts_norm, focal = 1., pp = (0., 0.), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold/focal_avg, mask = matching.inliers_mask)
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts_norm, matching.src_pts_norm, np.eye(3), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold/focal_avg, mask = matching.inliers_mask) 
+                    
         else:
             print("Not enough matches are found - %d < %d" , (len(self.matches),NB_Matching_Threshold))
-            return None, None
+            return np.zeros(len(matching.src_pts)), None
 
-        return maskInliers
-
-
-    def RecoverPose_3D_Points(self, src_pts, dst_pts):
-        #####################################################
-        ## Compute rotation and translation of camera 2    ##
-        ## Generate transformation matrix using R&t matrix ## 
-        ##      ''' Camera Matrix is mondatory '''         ##
-        #####################################################
-            points, Rot_RP, Transl_RP, mask_RP = cv.recoverPose(self.EssentialMat, dst_pts, src_pts, self.CameraMatrixArray)
-            # print ("\nCompute Transformation With recoverPose : ( ", points, " point inliers )")
-            # print ("    \nRotation \n", R) 
-            # print ("    \ntranslation \n", t) 
-
-            # transform = np.vstack((np.hstack((Rot_RP, transl_RP)), [0, 0, 0, 1]))
-            # print ("    \nTransformation Matrix \n", transform) 
-            return points, Rot_RP, Transl_RP, mask_RP
+        return self.maskInliers.reshape(-1)
     
     
-    def Triangulate(self, image_A, image_B, src_pts, dst_pts):
-        ###################################################
-        ##        Compute 3D points from 2D Images       ##
-        ###################################################
-            """ Projection matrix  """
-            ProjectionMatrix_1 = self.CameraMatrixArray @ image_A.absoluteTransformation["projection"]
-            ProjectionMatrix_2 = self.CameraMatrixArray @ image_B.absoluteTransformation["projection"]
 
-            # Triangulation
-            points4dHomogeneous = cv.triangulatePoints(ProjectionMatrix_1, ProjectionMatrix_2, src_pts.copy().reshape(-1, 1, 2), dst_pts.copy().reshape(-1, 1, 2))
-            points3d = cv.convertPointsFromHomogeneous(points4dHomogeneous.T).reshape(-1,3)  
-
-
-        #''' https://github.com/xdspacelab/openvslam/blob/master/src/openvslam/camera/perspective.cc#L155 '''
-        ###################################################
-        ## check if reprojected point has positive depth ##
-        ## filter object points to have reasonable depth ##
-        ###################################################
-            MAX_DEPTH = 4.
-            index_to_Remove = np.argwhere((points3d[:, 2] < 0) | (points3d[:, 2] > MAX_DEPTH) )
-            
-            return points3d, index_to_Remove
