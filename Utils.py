@@ -12,10 +12,7 @@ def intersect2D(Array_A, Array_B):
   Returns another numpy array with shared rows and index of items in A & B arrays
   """
   # [IDX, IDY] where Equal
-  # IndexEqual = np.asarray([(i, j, tuple(x)) for i,x in enumerate(Array_A) for j, y in enumerate (Array_B) if( (x[0] - y[0] >= -1) &  (x[0] - y[0] <= 1) &  (x[1] - y[1] >= -1) &  (x[1] - y[1] <= 1) )])
-
-  IndexEqual = np.asarray([(i, j, tuple(x)) for i,x in enumerate(Array_A) for j, y in enumerate (Array_B) if( tuple(x) == tuple(y) )])
-
+  IndexEqual = np.asarray([(i, j, tuple(x)) for i,x in enumerate(Array_A) for j, y in enumerate (Array_B) if( np.array_equal(x, y) )])
 
   idx = IndexEqual[:, 0].astype(int) if len(IndexEqual) != 0 else []
   idy = IndexEqual[:, 1].astype(int) if len(IndexEqual) != 0 else []
@@ -24,6 +21,13 @@ def intersect2D(Array_A, Array_B):
 
   return intersectionList, idx, idy
 
+
+def union (myList, dimm = 3):
+    union = set([])
+    for Element in myList:
+        Element  = set([tuple(x) for x in list(Element)])
+        union = (union | Element)
+    return np.array([list(x) for x in union])
 
 #####################################################################################################################################
 ##                                               reprjection Error Formula                                                         ##

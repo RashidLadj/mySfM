@@ -24,14 +24,14 @@ class EssentialMatrix:
     ## If points are undistort    --> Use K = Identity Matrix              ##
     #####################################################################
     def compute_EssentialMatrix (self, matching):
-
+        focal_avg = (matching.image_A.cameraMatrix[0][0] + matching.image_B.cameraMatrix[0][0]) / 2
+        
         NB_Matching_Threshold = 5
         if len(matching.matches) >= NB_Matching_Threshold:
-            focal_avg = (matching.image_A.cameraMatrix[0][0] + matching.image_B.cameraMatrix[0][0]) / 2
             if (np.array_equal(matching.image_A.cameraMatrix, matching.image_B.cameraMatrix)): 
                 ## Same Result ##
                 if(configuration["undistort_point"]):
-                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts_norm, matching.src_pts_norm, np.eye(3), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold / matching.image_A.cameraMatrix[0][0], mask = matching.inliers_mask) 
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts_norm, matching.src_pts_norm, np.eye(3), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold / focal_avg, mask = matching.inliers_mask) 
                 else:    
                     self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts, matching.src_pts, matching.image_A.cameraMatrix, method = self.methodOptimizer, prob = 0.999, threshold = self.threshold, mask = matching.inliers_mask) 
 
@@ -48,9 +48,9 @@ class EssentialMatrix:
                     
         else:
             print("Not enough matches are found - %d < %d" , (len(self.matches),NB_Matching_Threshold))
-            return np.zeros(len(matching.src_pts)), None
+            return np.zeros(len(matching.src_pts)), focal_avg
 
-        return self.maskInliers.reshape(-1)
+        return self.maskInliers.reshape(-1), focal_avg
     
     
 

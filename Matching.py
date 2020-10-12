@@ -1,8 +1,9 @@
 import cv2 as cv
 import numpy as np
+
 from PoseEstimation import *
 from Triangulation import *
-
+from Utils import *
 
 class Matching:
     def __init__(self, MatchingConfig, image_A, image_B):
@@ -38,18 +39,15 @@ class Matching:
 
     def computePose_2D2D(self, Essentialmat, initialize_step = False):
         ''' Compute Essential matrix '''
-        self.inliers_mask = Essentialmat.compute_EssentialMatrix(self)
+        self.inliers_mask, _ = Essentialmat.compute_EssentialMatrix(self)
         assert not (sum(self.inliers_mask) == 0), "not enough points to calculate E"
         print ("\tCompute essential matrix: ", sum(self.inliers_mask),"inliers /",len(self.matches))
 
         ''' Estimate Pose '''
-        inliers_count, Rotation_Mat, Transl_Vec, self.inliers_mask = PoseEstimation().RecoverPose_from_2D2D(self, Essentialmat)
-        print ("\tRecover-pose 2D-2D: ", inliers_count,"inliers /",len(self.src_pts))
-
-        ''' set absolute Pose '''
+        inliers_count, _, _, self.inliers_mask = PoseEstimation().EstimatePose_from_2D2D(self, Essentialmat)
+        print ("\Estimate-pose 2D-2D: ", inliers_count,"inliers /",len(self.src_pts))
         if (initialize_step):
             self.image_A.setAbsolutePose(None, np.eye(3), np.zeros(3))
-            self.image_B.setAbsolutePose(self.image_A, Rotation_Mat, Transl_Vec)
 
 
         ###########################################################
@@ -61,15 +59,15 @@ class Matching:
         points3d, index_to_Remove = Triangulation().Triangulate(self)
         
         # Update inliers points and descriptors
-        p_cloud                = np.delete(points3d                 , index_to_Remove, axis=0)
+        p_cloud            = np.delete(points3d         , index_to_Remove, axis=0)
 
-        src_pts_inliers_F      = np.delete(self.src_pts     , index_to_Remove, axis=0)
-        src_pts_norm_        = np.delete(self.src_pts_norm, index_to_Remove, axis=0)
-        src_desc_inliers_F     = np.delete(self.src_desc    , index_to_Remove, axis=0)
+        src_pts_inliers_F  = np.delete(self.src_pts     , index_to_Remove, axis=0)
+        src_pts_norm_      = np.delete(self.src_pts_norm, index_to_Remove, axis=0)
+        src_desc_inliers_F = np.delete(self.src_desc    , index_to_Remove, axis=0)
 
-        dst_pts_inliers_F      = np.delete(self.dst_pts     , index_to_Remove, axis=0)
-        dst_pts_norm_F       = np.delete(self.dst_pts_norm, index_to_Remove, axis=0)
-        dst_desc_inliers_F     = np.delete(self.dst_desc    , index_to_Remove, axis=0)
+        dst_pts_inliers_F  = np.delete(self.dst_pts     , index_to_Remove, axis=0)
+        dst_pts_norm_F     = np.delete(self.dst_pts_norm, index_to_Remove, axis=0)
+        dst_desc_inliers_F = np.delete(self.dst_desc    , index_to_Remove, axis=0)
 
     
         print ("\tnumber of points 3D between", self.image_A.id, "and",  self.image_B.id, "after triangulation is", len(p_cloud),"points")
@@ -82,6 +80,71 @@ class Matching:
             self.image_B.points_2D_used  = dst_pts_inliers_F
             self.image_B.descriptor_used = dst_desc_inliers_F
             self.image_B.points_3D_used  = p_cloud
+
+    
+    def computePose_3D2D(self, Essentialmat):
+        ''' Compute Essential matrix '''
+        self.inliers_mask, self.focal_avg = Essentialmat.compute_EssentialMatrix(self)
+        assert not (sum(self.inliers_mask) == 0), "not enough points to calculate E"
+        print ("\tCompute essential matrix: ", sum(self.inliers_mask),"inliers /",len(self.matches))
+
+        self.__update_inliers_mask()   # Take just inliers for triangulation
+
+        ###########################################################
+        ##              ''' Intersection 3D 2D '''               ##
+        ##                ''' Filter Matching '''                ##
+        ###########################################################
+        _, index_A, index_B = intersect2D(np.around(np.asarray(self.image_A.points_2D_used), decimals=0), np.around(np.asarray(self.src_pts), decimals=0)) 
+
+        """ Retrieve points for solver (inter_pts_3D_PnP & dst_pts_PnP) """
+        self.inter_pts_3D_PnP  = np.asarray(self.image_A.points_3D_used)[index_A, :].reshape(-1, 3)
+        self.dst_pts_B_2D_PnP  = np.asarray(self.dst_pts)               [index_B, :].reshape(-1, 2) 
+        self.dst_pts_B_norm_PnP= np.asarray(self.dst_pts_norm)          [index_B, :].reshape(-1, 2)
+        # pt_B_desc_Current  = np.asarray(dst_pts_inliers_E)[index_B, :]  ## MANQUE
+        print("\tnumber of 3D points to project on the new image for estimate points is ", len(self.inter_pts_3D_PnP), "points")
+
+        ''' Estimate Pose '''
+        inliers_count, _, _, self.inliers_mask = PoseEstimation().EstimatePose_from_3D2D(self, Essentialmat)
+        print ("\tEstimate-pose 3D-2D: ", inliers_count,"inliers /",len(self.inter_pts_3D_PnP))
+
+        ''' Update Existing 3D point to add for current image '''
+        self.inter_pts_3D_PnP  = np.asarray(self.inter_pts_3D_PnP)  [self.inliers_mask, :].reshape(-1, 3)
+        self.dst_pts_B_2D_PnP  = np.asarray(self.dst_pts_B_2D_PnP)  [self.inliers_mask, :].reshape(-1, 2) 
+        self.dst_pts_B_norm_PnP= np.asarray(self.dst_pts_B_norm_PnP)[self.inliers_mask, :].reshape(-1, 2)
+
+        ###########################################################
+        ##    ''' Generate 3D_points using Triangulation '''     ##
+        ###########################################################
+        print ("\tGenerate 3D_points using Triangulation")
+        """ Retrieve points for triangulate (not in intersection) """
+        self.src_pts      = np.delete(self.src_pts      , index_B, axis=0).reshape(-1, 2)
+        self.src_pts_norm = np.delete(self.src_pts_norm , index_B, axis=0).reshape(-1, 2)
+        self.dst_pts      = np.delete(self.dst_pts      , index_B, axis=0).reshape(-1, 2)
+        self.dst_pts_norm = np.delete(self.dst_pts_norm , index_B, axis=0).reshape(-1, 2)
+
+        points3d, index_to_Remove = Triangulation().Triangulate(self)
+        
+        # Update inliers points and descriptors
+        p_cloud            = np.delete(points3d         , index_to_Remove, axis=0)
+
+        src_pts_inliers_F  = np.delete(self.src_pts     , index_to_Remove, axis=0)
+        src_pts_norm_      = np.delete(self.src_pts_norm, index_to_Remove, axis=0)
+        src_desc_inliers_F = np.delete(self.src_desc    , index_to_Remove, axis=0)
+
+        dst_pts_inliers_F  = np.delete(self.dst_pts     , index_to_Remove, axis=0)
+        dst_pts_norm_F     = np.delete(self.dst_pts_norm, index_to_Remove, axis=0)
+        dst_desc_inliers_F = np.delete(self.dst_desc    , index_to_Remove, axis=0)
+
+    
+        print ("\tnumber of points 3D between", self.image_A.id, "and",  self.image_B.id, "after triangulation is", len(p_cloud),"points")
+
+        self.image_A.points_2D_used  = np.append(self.image_A.points_2D_used, src_pts_inliers_F, axis = 0)
+        self.image_A.points_3D_used  = np.append(self.image_A.points_3D_used, p_cloud, axis = 0)
+
+        self.image_B.points_2D_used  = self.dst_pts_B_2D_PnP
+        self.image_B.points_2D_used  = np.append(self.image_B.points_2D_used, dst_pts_inliers_F, axis = 0)
+        self.image_B.points_3D_used  = self.inter_pts_3D_PnP
+        self.image_B.points_3D_used  = np.append(self.image_B.points_3D_used, p_cloud, axis = 0)
 
     
     def __update_inliers_mask(self):
@@ -282,10 +345,3 @@ class MatchingConfig:
 
         return unionMatches, image_matches 
 
-      
-    
-
- 
-
-
-    

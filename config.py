@@ -5,7 +5,7 @@ default_config_yaml = '''
 # Params for features
 feature_type: ORB                       # Feature type (SURF, SIFT, ORB, AKAZE)
 max_keyPoint: 20000
-feature_process_size: 2048              # Resize the image if its size is larger than specified. Set to -1 for original size
+feature_process_size: 1024              # Resize the image if its size is larger than specified. Set to -1 for original size
 
 # Params for general matching
 lowes_ratio: 0.75                        # Ratio test for matches
