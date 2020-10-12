@@ -48,8 +48,9 @@ Essentialmat = EssentialMatrix(methodOptimizer = configuration["essential_method
 ##          ''' Load distortion coefficients '''         ##
 ##                Samsung S7 (1920 x 1080)               ##
 ###########################################################
+ImageFolder = "Imgs/Saint_Roch_Original/"
 ''' toutes les images ont la même résolution et sont prises par mon samsung S7 '''
-CameraMatrix = loadtxt('CameraMatrixArray.csv', delimiter=',')  #FullHD
+CameraMatrix = loadtxt(ImageFolder+"samsung-s7-1920x1080.csv", delimiter=',')  #FullHD
 
 ''' toutes les images ont la même résolution et sont prises par mon samsung S7 '''
 DistortionCoef = None  # not used
@@ -63,9 +64,8 @@ DistortionCoef = None  # not used
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-ImageFolder = "Images/"
 assert path.exists(ImageFolder), 'veuillez verifier le chemin du Folder'
-images_name = sorted([f for f in listdir(ImageFolder)])
+images_name = sorted([file for file in listdir(ImageFolder) if file.endswith(".jpg") or file.endswith(".JPG") or file.endswith(".PNG") or file.endswith(".png")])
 
 
 ###########################################################
@@ -172,6 +172,7 @@ matching_AB.computePose_3D2D(Essentialmat)
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '''''''''       PHASE Four: Display Point-Cloud      '''''''''          
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ###########################################################
 ##  ''' Recuprer tous les points 3D et les afficher '''  ##
 ###########################################################
@@ -191,9 +192,6 @@ for i, img in enumerate(Images):
     mesh_img_i = o3d.geometry.TriangleMesh.create_coordinate_frame(size = scale).transform(img.absoluteTransformation["transform"])
     vis.add_geometry(mesh_img_i)
     scale *= 0.5
-
-
-
 
 """  Add point-Cloud of images """
 pcd = o3d.geometry.PointCloud()
