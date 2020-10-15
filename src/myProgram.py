@@ -7,11 +7,11 @@ from os import path
 from numpy import loadtxt
 import open3d as o3d
 
-import json
 import itertools
 
 from config import *
 from Utils import *
+from Save_Load_cameraParams import *
 
 from Image import *
 from DescriptorMatcherConfig import *
@@ -20,6 +20,7 @@ from Matching import *
 from EssentialMatEstimation import *
 from PoseEstimation import *
 
+import copy
 
 
 ###########################################################
@@ -46,16 +47,9 @@ Essentialmat = EssentialMatrix(methodOptimizer = configuration["essential_method
 ###########################################################
 ##        ''' Load Camera Matrix and update it '''       ##
 ##          ''' Load distortion coefficients '''         ##
-##                Samsung S7 (1920 x 1080)               ##
 ###########################################################
 ImageFolder = "Imgs/Saint_Roch_Original/"
-''' toutes les images ont la même résolution et sont prises par mon samsung S7 '''
-CameraMatrix = loadtxt(ImageFolder+"samsung-s7-1920x1080.csv", delimiter=',')  #FullHD
-
-''' toutes les images ont la même résolution et sont prises par mon samsung S7 '''
-DistortionCoef = None  # not used
-
-
+cameraParams = load_cameraParams(ImageFolder+"camera_Samsung_s7.yaml")
 
 
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -74,7 +68,7 @@ images_name = sorted([file for file in listdir(ImageFolder) if file.endswith(".j
 print ("Read images")
 Images = []
 for image in images_name:
-    Images.append(Image(ImageFolder, image, configuration["feature_process_size"], CameraMatrix.copy()))
+    Images.append(Image(ImageFolder, image, configuration["feature_process_size"], copy.deepcopy(cameraParams)))
 print ("    Images = ", images_name)
 
 
@@ -137,14 +131,11 @@ initialize_step == False
 ###############################################################
 ## ''' Retrieve best candidate pair for incremetal phase ''' ##
 ###############################################################
-print ("\nRetrieve best candidate pair for incremetal phase")
 index_candidate_pair = np.argmax([len (x.matches) for x in matches_vector])
 matching_AB = matches_vector[index_candidate_pair]
 matches_vector.pop(index_candidate_pair)
-print ("\nRetrieve best candidate pair for initialization: (",matching_AB.image_A.id, ",", matching_AB.image_B.id, ") with ", len(matching_AB.matches), "matches")
+print ("\nRetrieve best candidate pair for incremetal phase: (",matching_AB.image_A.id, ",", matching_AB.image_B.id, ") with ", len(matching_AB.matches), "matches")
 
-print (len(matching_AB.image_A.points_2D_used))
-print (len(matching_AB.image_B.points_2D_used))
 
 ''' A verifier '''
 ## Rectify precedent_image, current_image

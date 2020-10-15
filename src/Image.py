@@ -1,17 +1,18 @@
 import cv2 as cv
 import numpy as np
 from Utils import *
+import copy
+
 
 class Image:
-    def __init__(self, pathFolder, fileName, maxWH = None, CameraMatrix = np.eye(3)):
+    def __init__(self, pathFolder, fileName, maxWH = None, CameraParams = None):
         # Initialize a number of global variables
         self.path      = str(pathFolder + fileName)
         self.id        = fileName.split(".")[0]
         self.imageRGB  = self.readImage(maxWH)
         self.imageGray = cv.cvtColor(self.imageRGB, cv.COLOR_BGR2GRAY)
         self.image_height, self.image_width = self.imageRGB.shape[:2]
-
-        self.cameraMatrix = self.__ComputeCameraMatrix(CameraMatrix)
+        self.cameraMatrix = self.__ComputeCameraMatrix(CameraParams)
         self.keyPoints = None
         self.des = None
         
@@ -56,7 +57,6 @@ class Image:
         # self.points = np.around(np.float32([ keyPoint.pt for keyPoint in self.keyPoints ]).reshape(-1,2), decimals=0)
     
     
-
     ######################################################################################
     ## ''' Redimentionner l'image en gardant le Ratio , Choix du Width ou du Height ''' ##
     ######################################################################################
@@ -87,22 +87,24 @@ class Image:
 
         # resize the image
         resized = cv.resize(image, dim, interpolation = inter)
-
         # return the resized image
         return resized
         
 
-    def __ComputeCameraMatrix(self, CameraMatrix):
-        ''' TODO: --> Compute camera Matrix '''
-        ratio_width  = 1920. / self.image_width
-        ratio_height = 1080. / self.image_height
+    def __ComputeCameraMatrix(self, CameraParams):
+        ''' Compute camera Matrix '''
+        CameraMatrix = CameraParams["extrinsic_params"]
+        Resolution = CameraParams["resolution"]
+        print(CameraMatrix, Resolution)
+        ratio_width  = Resolution[0] / self.image_width
+        ratio_height = Resolution[1] / self.image_height
         
-        CameraMatrix[0][0] /= ratio_width  # fx
-        CameraMatrix[1][1] /= ratio_width  # fy
-        CameraMatrix[0][2] /= ratio_width
-        CameraMatrix[1][2] /= ratio_height
+        CameraMatrix[0][0] /= ratio_width   # fx
+        CameraMatrix[1][1] /= ratio_width   # fy
+        CameraMatrix[0][2] /= ratio_width   # cx
+        CameraMatrix[1][2] /= ratio_height  # cy
 
-        return CameraMatrix
+        return np.array(CameraMatrix)
     
 
     # def setRelativePose(self, Image, Rot, Trans):
