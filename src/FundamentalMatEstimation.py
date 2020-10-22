@@ -7,13 +7,11 @@ class FundamentalMatrix:
         self.ransacReprojThreshold = ransacReprojThreshold
 
 
-    def compute_FondamentalMatrix (self, src_pts, dst_pts):
+    def compute_FundamentalMatrix (self, matching):
         NB_Matching_Threshold = 8
-        if len(src_pts) < NB_Matching_Threshold:
-            return [], []
-        
-        FondamentalMat, maskInliers = cv.findFundamentalMat(src_pts, dst_pts, method = self.methodOptimizer, ransacReprojThreshold = self.ransacReprojThreshold)
-        return FondamentalMat, maskInliers
-            
+        if len(matching.prec_pts) < NB_Matching_Threshold:
+            return None, None
+        self.FundamentalMat, maskInliers = cv.findFundamentalMat(matching.curr_pts, matching.prec_pts, method = self.methodOptimizer, ransacReprojThreshold = self.ransacReprojThreshold)
 
-    
+        return maskInliers.reshape(-1)
+            

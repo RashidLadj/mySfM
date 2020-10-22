@@ -1,4 +1,9 @@
 import numpy as np
+import cv2 as cv
+
+from PIL import Image, ImageFont, ImageDraw
+from pyquaternion import Quaternion
+import open3d as o3d
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning) 
 
@@ -87,8 +92,106 @@ def current_relative_transform(current_absolute_transform, precedent_absolute_tr
     return current_absolute_transform @ inv_poseRt(precedent_absolute_transform)
 
 
+def r_and_t_Vec_from_transformation(transform):   
+    proj = projection_from_transformation(transform)
+    rVec = cv.Rodrigues(transform[:3, :3])[0].reshape(-1)
+    tVec = proj[:3, 2]
+    return rVec, tVec
+
+
+#/***********************************************/#
+# Function: Check Rotation Matrix (Must be det=1) #
+#/***********************************************/#
+def CheckCoherentRotation(Rotation_mat):
+    if np.abs( np.linalg.det( Rotation_mat ) - 1 > 1e-07):
+        print ("det(R) != +-1.0, this is not a rotation matrix")
+        return False
+    return True
+
+
+def compute_reprojection_error(transfom_matrix, pts_3d, pts_2d, camera_matrix = np.eye(3)):
+    rVec, tVec = r_and_t_Vec_from_transformation(transfom_matrix)
+    project_points, _ = cv.projectPoints(pts_3d.T, rVec, tVec, camera_matrix, distCoeffs=None)
+    reprojection_error = np.linalg.norm(pts_2d.reshape(-1, 2) - project_points.reshape(-1, 2)) / len(project_points)
+    return reprojection_error
+
+
+
 ################## From solvePNP ###########################
 # Projection = np.concatenate(cv.rodriges(rvec)[0], tvec)  #
 # Rot.T = cv.rodriges(rvec)[0]                             # 
 # - Rot.T * transl = tvec                                  #
 #############################################################
+
+
+
+#/**************************************************************/#
+#  """Saves an ndarray of 3D coordinates (in meshlab format)"""  #
+#/**************************************************************/#
+def pts2ply(pts, colors = None, filename = 'point_cloud.ply'): 
+    with open(filename,'w') as f: 
+        f.write('ply\n')
+        f.write('format ascii 1.0\n')
+        f.write('element vertex {}\n'.format(pts.shape[0]))
+        
+        f.write('property float x\n')
+        f.write('property float y\n')
+        f.write('property float z\n')
+
+        f.write('property uchar red\n')
+        f.write('property uchar green\n')
+        f.write('property uchar blue\n')
+        
+        f.write('end_header\n')
+
+        if colors == None:
+            colors = np.zeros((len(pts), 3), dtype=int)
+            colors[:, 0] = 255
+        colors.astype(int)
+        
+        for pt, color in zip(pts, colors): 
+            f.write('{} {} {} {} {} {}\n'.format(pt[0],   pt[1],   pt[2],
+                                                 color[0],color[1],color[2]))
+
+
+def text_3d(text, pos, direction=None, degree=0.0, font='/Library/Fonts/Arial.ttf', font_size=16):
+    """
+    Generate a 3D text point cloud used for visualization.
+    :param text: content of the text
+    :param pos: 3D xyz position of the text upper left corner
+    :param direction: 3D normalized direction of where the text faces
+    :param degree: in plane rotation of text
+    :param font: Name of the font - change it according to your system
+    :param font_size: size of the font
+    :return: o3d.geoemtry.PointCloud object
+    """
+    if direction is None:
+        direction = (0., 0., 1.)
+
+    from PIL import Image as Im
+    from PIL import ImageFont
+    from PIL import ImageDraw
+    from pyquaternion import Quaternion
+
+    font_obj = ImageFont.truetype(font, font_size)
+    font_dim = font_obj.getsize(text)
+
+    img = Im.new('RGB', font_dim, color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    draw.text((0, 0), text, font=font_obj, fill=(0, 0, 0))
+    img = np.asarray(img)
+    img_mask = img[:, :, 0] < 128
+    indices = np.indices([*img.shape[0:2], 1])[:, img_mask, 0].reshape(3, -1).T
+
+    pcd = o3d.geometry.PointCloud()
+    pcd.colors = o3d.utility.Vector3dVector(img[img_mask, :].astype(float) / 255.0)
+    pcd.points = o3d.utility.Vector3dVector(indices / 100.0)
+
+    raxis = np.cross([0.0, 0.0, 1.0], direction)
+    if np.linalg.norm(raxis) < 1e-6:
+        raxis = (0.0, 0.0, 1.0)
+    trans = (Quaternion(axis=raxis, radians=np.arccos(direction[2])) *
+             Quaternion(axis=direction, degrees=degree)).transformation_matrix
+    trans[0:3, 3] = np.asarray(pos)
+    pcd.transform(trans)
+    return pcd

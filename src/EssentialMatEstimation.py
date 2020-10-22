@@ -31,24 +31,24 @@ class EssentialMatrix:
             if (np.array_equal(matching.image_A.cameraMatrix, matching.image_B.cameraMatrix)): 
                 ## Same Result ##
                 if(configuration["undistort_point"]):
-                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts_norm, matching.src_pts_norm, np.eye(3), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold / focal_avg, mask = matching.inliers_mask) 
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.curr_pts_norm, matching.prec_pts_norm, np.eye(3), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold / focal_avg, mask = matching.inliers_mask) 
                 else:    
-                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts, matching.src_pts, matching.image_A.cameraMatrix, method = self.methodOptimizer, prob = 0.999, threshold = self.threshold, mask = matching.inliers_mask) 
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.curr_pts, matching.prec_pts, matching.image_A.cameraMatrix, method = self.methodOptimizer, prob = 0.999, threshold = self.threshold, mask = matching.inliers_mask) 
 
             else:
                 ## Same Result ##
                 if cv.__version__ >= '4.5.0':
                     ## New Method will be integrate in next  release of OpenCV##
                     """https://docs.opencv.org/master/d9/d0c/group__calib3d.html#gafafd52c0372b12dd582597bfb1330430"""
-                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts, matching.src_pts, cameraMatrix1 = matching.image_B.cameraMatrix, cameraMatrix2 = matching.image_A.cameraMatrix, method = self.methodOptimizer, prob = 0.999, threshold = self.threshold, mask = matching.inliers_mask) 
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.curr_pts, matching.prec_pts, cameraMatrix1 = matching.image_B.cameraMatrix, cameraMatrix2 = matching.image_A.cameraMatrix, method = self.methodOptimizer, prob = 0.999, threshold = self.threshold, mask = matching.inliers_mask) 
 
                 else:
-                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts_norm, matching.src_pts_norm, focal = 1., pp = (0., 0.), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold/focal_avg, mask = matching.inliers_mask)
-                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.dst_pts_norm, matching.src_pts_norm, np.eye(3), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold/focal_avg, mask = matching.inliers_mask) 
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.curr_pts_norm, matching.prec_pts_norm, focal = 1., pp = (0., 0.), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold/focal_avg, mask = matching.inliers_mask)
+                    self.EssentialMat, self.maskInliers = cv.findEssentialMat(matching.curr_pts_norm, matching.prec_pts_norm, np.eye(3), method = self.methodOptimizer, prob = 0.999, threshold = self.threshold/focal_avg, mask = matching.inliers_mask) 
                     
         else:
             print("Not enough matches are found - %d < %d" , (len(self.matches),NB_Matching_Threshold))
-            return np.zeros(len(matching.src_pts)), focal_avg
+            return np.zeros(len(matching.prec_pts)), focal_avg
 
         return self.maskInliers.reshape(-1), focal_avg
     

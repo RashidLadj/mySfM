@@ -4,7 +4,7 @@ from Utils import *
 import copy
 
 
-class Image:
+class Image_:
     def __init__(self, pathFolder, fileName, maxWH = None, CameraParams = None):
         # Initialize a number of global variables
         self.path      = str(pathFolder + fileName)
@@ -24,10 +24,6 @@ class Image:
         self.points_2D_used  = []
         self.descriptor_used = []
         self.points_3D_used  = []
-        
-
-    def show_image(image):
-        cv2.imshow(image)
 
 
     ###################################################################
@@ -95,7 +91,7 @@ class Image:
         ''' Compute camera Matrix '''
         CameraMatrix = CameraParams["extrinsic_params"]
         Resolution = CameraParams["resolution"]
-        print(CameraMatrix, Resolution)
+
         ratio_width  = Resolution[0] / self.image_width
         ratio_height = Resolution[1] / self.image_height
         
