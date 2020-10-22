@@ -2,6 +2,7 @@
 .DS_Store
 Json_Files/
 NO_ADD/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
