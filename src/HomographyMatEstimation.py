@@ -11,25 +11,23 @@ class HomographyMatrix:
         self.ransacReprojThreshold = ransacReprojThreshold
 
 
-    #####################################################################
-    ## NOTE: Pose is calculated from dst to src so it's the same for F
-    # 
-    #  ##
-    #####################################################################
-    def compute_HomographyMatrix (self, matching):
+    def compute_HomographyMatrix (self, src_pts, dst_pts, image_A, image_B, matches):
         NB_Matching_Threshold = 4
-        if len(matching.prec_pts) < NB_Matching_Threshold:
+        if len(src_pts) < NB_Matching_Threshold:
             return None, None
 
-        self.HomographyMat, maskInliers = cv.findHomography(matching.curr_pts, matching.prec_pts, method = self.methodOptimizer, ransacReprojThreshold = self.ransacReprojThreshold)
+        # minVal, maxVal, _, _ = cv.minMaxLoc(src_pts)
+        # self.ransacReprojThreshold = 0.004 * maxVal
 
-        draw_params = dict(matchColor = (0,255,0), # draw matches in green color
-                        singlePointColor = None,
-                        matchesMask = maskInliers, # draw only inliers
-                        flags = 2)
-        goodMatchesImage = cv.drawMatches(matching.image_A.imageRGB, matching.image_A.keyPoints, matching.image_B.imageRGB, matching.image_B.keyPoints, matching.matches, None, **draw_params)
-        
-        # cv.imshow("Homog_"+str(matching.image_A.id)+"_"+str(matching.image_B.id), goodMatchesImage)
+        self.HomographyMat, maskInliers = cv.findHomography(src_pts, dst_pts, method = self.methodOptimizer, ransacReprojThreshold = self.ransacReprojThreshold)
+
+        # draw_params = dict(matchColor = (0,255,0), # draw matches in green color
+        #                 singlePointColor = None,
+        #                 matchesMask = maskInliers, # draw only inliers
+        #                 flags = 2)
+
+        # goodMatchesImage = cv.drawMatches(image_A.imageRGB, image_A.keyPoints, image_B.imageRGB, image_B.keyPoints, matches, None, **draw_params)
+        # cv.imshow("Homog_"+str(image_A.id)+"_"+str(image_B.id), goodMatchesImage)
 
         return maskInliers.reshape(-1)
             
