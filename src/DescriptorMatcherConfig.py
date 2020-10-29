@@ -99,10 +99,13 @@ class MatchingConfig:
 
     def __config_method(self):
         if not self.symmetric:
+            print("- matching assymetric")
             return self.__MatchingSimple
         elif self.symmetric and self.symmetric_Type == "intersection" :
+            print("- matching symetric intersection")
             return self.__MatchingIntersection
         elif self.symmetric and self.symmetric_Type == "union" :
+            print("- matching symetric union")
             return self.__MatchingUnion
         else:
             print ("Configuration False")
@@ -140,12 +143,6 @@ class MatchingConfig:
         # matches = sorted(matches, key = lambda x:x.distance)
 
         return matches, image_matches    
-
-
-    def __permuteValue(self, item):
-        temp = item.trainIdx
-        item.trainIdx = item.queryIdx
-        item.queryIdx = temp
 
 
     def __areEqual(self, itemAB, itemBA):
@@ -189,7 +186,10 @@ class MatchingConfig:
             matches_BA = [(item[0]) for item in good_BA]
 
         matches_BA_ConvertToAB = matches_BA.copy()
-        [self.__permuteValue(item) for item in matches_BA_ConvertToAB]
+        
+        def permuteValue(item):
+            item.trainIdx, item.queryIdx = item.queryIdx, item.trainIdx
+        [permuteValue(item) for item in matches_BA_ConvertToAB]
 
         intersectionMatches = []
         for itemAB in matches_AB:
@@ -249,18 +249,20 @@ class MatchingConfig:
             matches_BA = [(item[0]) for item in good_BA]
 
         matches_BA_ConvertToAB = matches_BA.copy()
-        [self.__permuteValue(item) for item in matches_BA_ConvertToAB]
+        def permuteValue(item):
+            item.trainIdx, item.queryIdx = item.queryIdx, item.trainIdx
+        [permuteValue(item) for item in matches_BA_ConvertToAB]
 
         unionMatches = []
         [unionMatches.append(item) for item in matches_AB]
         for itemBA in matches_BA_ConvertToAB:
             exist = False
-        for item in unionMatches:
-            if self.__areEqual(item, itemBA) :
-                exist = True
-            break   # Je n'ai pas trouvé un autre moyen de faire la comparaison
-        if not exist:
-            unionMatches.append(itemBA)
+            for item in unionMatches:
+                if self.__areEqual(item, itemBA) :
+                    exist = True
+                break   # Je n'ai pas trouvé un autre moyen de faire la comparaison
+            if not exist:
+                unionMatches.append(itemBA)
 
         # Sort them in the order of their distance.
         unionMatches = sorted(unionMatches, key = lambda x: x.distance)
