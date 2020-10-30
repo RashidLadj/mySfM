@@ -3,14 +3,14 @@
 ### Dependencies
 mySfM requires python 3.6 or 3.7 
 
-    pip3 install -r requirements.txt
+    pip install -r requirements.txt
 
 or
 
-    pip3 Setup.py install
+    pip Setup.py install
 
 ### Usage
 
-For the matching tests :
+For start reconstruction :
 
     python3 src/myProgram.py
