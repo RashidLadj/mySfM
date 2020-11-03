@@ -23,7 +23,6 @@ class EssentialMatrix:
     ## If points aren't undistort --> Use K = cameraMatrix                 ##
     ## If points are undistort    --> Use K = Identity Matrix              ##
     #####################################################################
-    # def compute_EssentialMatrix (self, matching):
     def compute_EssentialMatrix  (self, src_pts, dst_pts, src_pts_norm, dst_pts_norm, image_A, image_B):
 
         focal_avg = (image_A.cameraMatrix[0][0] + image_B.cameraMatrix[0][0]) / 2

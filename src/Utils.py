@@ -1,16 +1,19 @@
 import numpy as np
 import cv2 as cv
-
-from PIL import Image, ImageFont, ImageDraw
-from pyquaternion import Quaternion
 import open3d as o3d
+
+from pyquaternion import Quaternion
+from PIL import Image as Im
+from PIL import ImageFont, ImageDraw
+
+import open3d as o3d
+
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning) 
 
 #########################################################################
 ## https://gist.github.com/RashidLadj/bac71f3d3380064de2f9abe0ae43c19e ##
 #########################################################################
-
 def intersect2D(Array_A, Array_B):
   """
   Find row intersection between 2D numpy arrays, a and b.
@@ -34,29 +37,38 @@ def union (myList, dimm = 3):
         union = (union | Element)
     return np.array([list(x) for x in union])
 
+
 #####################################################################################################################################
 ##                                               reprjection Error Formula                                                         ##
 ## https://stackoverflow.com/questions/23781089/opencv-calibratecamera-2-reprojection-error-and-custom-computed-one-not-agree?rq=1 ##
 #####################################################################################################################################
+def compute_reprojection_error_2(transfom_matrix, pts_3d, pts_2d, camera_matrix = np.eye(3)):
+    rVec, tVec = r_and_t_Vec_from_transformation(transfom_matrix)
+    return compute_reprojection_error_1(rVec, tVec,pts_3d, pts_2d, camera_matrix)
+    
+
+def compute_reprojection_error_1(rVec, tVec, pts_3d, pts_2d, camera_matrix):
+    project_points, _ = cv.projectPoints(pts_3d, rVec, tVec, camera_matrix, distCoeffs=None)
+    project_points = project_points.reshape(-1, 2)
+
+    reprojection_error_avg = sum([np.linalg.norm(pts_2d[i] - project_points[i])  for i in range (len(project_points))]) / len(project_points)
+    
+    return reprojection_error_avg
+    
 
 
-#####################################################################################################################################
-##                                               Filter negative depth source                                                      ##
-##                    https://github.com/xdspacelab/openvslam/blob/master/src/openvslam/camera/perspective.cc#L155                 ##
-#####################################################################################################################################
-
-    # # # # # # # # # # # # # # # # # #
-    # #     R | s*t                 # # 
-    # # T = -------                 # # 
-    # #     0 0 0 1                 # #     
-    # #                             # #
-    # #           R.T | -R.T*s*t    # # 
-    # # inv(T) =  --------------    # # 
-    # #            0  0  0  1       # # 
-    # #                             # #
-    # # P = R.T| -R.T*s*t           # # 
-    # # P = inv(T)[:3, :4]          # # 
-    # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # #
+# #     R | s*t                 # # 
+# # T = -------                 # # 
+# #     0 0 0 1                 # #     
+# #                             # #
+# #           R.T | -R.T*s*t    # # 
+# # inv(T) =  --------------    # # 
+# #            0  0  0  1       # # 
+# #                             # #
+# # P = R.T| -R.T*s*t           # # 
+# # P = inv(T)[:3, :4]          # # 
+# # # # # # # # # # # # # # # # # #
 
 ####################################################################
 ##      [4x4] homogeneous Transform from [3x3] R and [3x1] t      ##
@@ -109,14 +121,6 @@ def CheckCoherentRotation(Rotation_mat):
     return True
 
 
-def compute_reprojection_error(transfom_matrix, pts_3d, pts_2d, camera_matrix = np.eye(3)):
-    rVec, tVec = r_and_t_Vec_from_transformation(transfom_matrix)
-    project_points, _ = cv.projectPoints(pts_3d.T, rVec, tVec, camera_matrix, distCoeffs=None)
-    reprojection_error = np.linalg.norm(pts_2d.reshape(-1, 2) - project_points.reshape(-1, 2)) / len(project_points)
-    return reprojection_error
-
-
-
 ################## From solvePNP ###########################
 # Projection = np.concatenate(cv.rodriges(rvec)[0], tvec)  #
 # Rot.T = cv.rodriges(rvec)[0]                             # 
@@ -154,7 +158,7 @@ def pts2ply(pts, colors = None, filename = 'point_cloud.ply'):
                                                  color[0],color[1],color[2]))
 
 
-def text_3d(text, pos, direction=None, degree=0.0, font='/Library/Fonts/Arial.ttf', font_size=16):
+def text_3d(text, pos, direction=(1., 0., 0.), degree=0., font='/Library/Fonts/Arial.ttf', font_size=16):
     """
     Generate a 3D text point cloud used for visualization.
     :param text: content of the text
@@ -165,13 +169,6 @@ def text_3d(text, pos, direction=None, degree=0.0, font='/Library/Fonts/Arial.tt
     :param font_size: size of the font
     :return: o3d.geoemtry.PointCloud object
     """
-    if direction is None:
-        direction = (0., 0., 1.)
-
-    from PIL import Image as Im
-    from PIL import ImageFont
-    from PIL import ImageDraw
-    from pyquaternion import Quaternion
 
     font_obj = ImageFont.truetype(font, font_size)
     font_dim = font_obj.getsize(text)
@@ -185,9 +182,9 @@ def text_3d(text, pos, direction=None, degree=0.0, font='/Library/Fonts/Arial.tt
 
     pcd = o3d.geometry.PointCloud()
     pcd.colors = o3d.utility.Vector3dVector(img[img_mask, :].astype(float) / 255.0)
-    pcd.points = o3d.utility.Vector3dVector(indices / 100.0)
+    pcd.points = o3d.utility.Vector3dVector(indices / 200.0)
 
-    raxis = np.cross([0.0, 0.0, 1.0], direction)
+    raxis = np.cross([0.0, 0.0, 0.0], direction)
     if np.linalg.norm(raxis) < 1e-6:
         raxis = (0.0, 0.0, 1.0)
     trans = (Quaternion(axis=raxis, radians=np.arccos(direction[2])) *
@@ -195,3 +192,4 @@ def text_3d(text, pos, direction=None, degree=0.0, font='/Library/Fonts/Arial.tt
     trans[0:3, 3] = np.asarray(pos)
     pcd.transform(trans)
     return pcd
+

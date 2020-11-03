@@ -21,9 +21,8 @@ class Image_:
         self.absoluteTransformation = {}
 
         # used in Point_Cloud
-        self.points_2D_used  = []
-        self.descriptor_used = []
-        self.points_3D_used  = []
+        self.points_2D_used  = np.empty([0, 2])
+        self.points_3D_used  = np.empty([0, 3])
 
 
     ###################################################################
@@ -49,9 +48,7 @@ class Image_:
     def keyPointDetector(self, detector):
         # find the keypoints and descriptors with detector ( sift, surf, orb)
         self.keyPoints, self.des = detector.detectAndCompute(self.imageGray,None)
-        #Not used
-        # self.points = np.around(np.float32([ keyPoint.pt for keyPoint in self.keyPoints ]).reshape(-1,2), decimals=0)
-    
+        
     
     ######################################################################################
     ## ''' Redimentionner l'image en gardant le Ratio , Choix du Width ou du Height ''' ##
@@ -69,15 +66,13 @@ class Image_:
 
         # check to see if the width is None
         if width is None:
-            # calculate the ratio of the height and construct the
-            # dimensions
+            # calculate the ratio of the height and construct the dimensions
             r = height / float(h)
             dim = (int(w * r), height)
 
         # otherwise, the height is None
         else:
-            # calculate the ratio of the width and construct the
-            # dimensions
+            # calculate the ratio of the width and construct the dimensions
             r = width / float(w)
             dim = (width, int(h * r))
 
