@@ -33,9 +33,6 @@ class Matching:
         # Undistort points for Essential Matrix calculation --> CameraMatrix will be Identity matrix
         self.prec_pts_norm = cv.undistortPoints((self.prec_pts), cameraMatrix = self.image_A.cameraMatrix, distCoeffs = None)
         self.curr_pts_norm = cv.undistortPoints((self.curr_pts), cameraMatrix = self.image_B.cameraMatrix, distCoeffs = None)
-        # affine = self.CameraMatrix[0:2, :]
-        # self.prec_ptsNorm = cv.transform(self.prec_ptsNorm, affine)
-        # self.curr_ptsNorm = cv.transform(self.curr_ptsNorm, affine)
     
 
     def permute_prec_curr(self):

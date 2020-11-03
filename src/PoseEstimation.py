@@ -16,10 +16,10 @@ class PoseEstimation:
     #############################################################
     def FindPoseEstimation_RecoverPose(self, essential_matrix, src_pts, dst_pts, src_pts_norm, dst_pts_norm, cameraMatrix_A, cameraMatrix_B, inliers_mask = None):
         # /*******************************************************/
-        # /**   Compute rotation and translation of camera 2    **/
+        # /**   Compute rotation and translation of new image   **/
         # /**         ''' Camera Matrix is mondatory '''        **/
         # /** points undistort camera matrix == identity matrix **/
-        # /**            Use undistore de préférence            **/
+        # /**            Use undistort is recommended           **/
         # /*******************************************************/
 
         if(configuration["undistort_point"] or not np.array_equal(cameraMatrix_A, cameraMatrix_B)):
@@ -27,17 +27,15 @@ class PoseEstimation:
         else:
             inliers_count, Rotation_Mat, Transl_Vec, _ = cv.recoverPose(essential_matrix, src_pts,      dst_pts,      cameraMatrix = cameraMatrix_A, mask = inliers_mask)
 
-
-
         if not CheckCoherentRotation(Rotation_Mat):
             print ("\tRotation Erreur in EstimatePose_from_2D2D")
             return
         
-        return inliers_count, Rotation_Mat, Transl_Vec#, mask_inliers
+        return inliers_count, Rotation_Mat, Transl_Vec
 
     
     #############################################################
-    ##      ''' PoseEstimation 2D-2D - Initialization'''       ##
+    ##       ''' PoseEstimation 2D-2D - Incremental '''        ##
     #############################################################
     def EstimatePose_from_2D2D_scale(self, matching, EssentialMatrix):
         #####################################################
@@ -50,10 +48,6 @@ class PoseEstimation:
         else:
             inliers_count, Rotation_Mat, Transl_Vec, mask_inliers = cv.recoverPose(EssentialMatrix.EssentialMat, matching.curr_pts, matching.prec_pts, cameraMatrix = matching.image_A.cameraMatrix, mask = matching.inliers_mask)
         
-        # matching.image_B.setRelativPose(matching.image_A, Rotation_Mat, Transl_Vec)
-        # matching.image_B.relativeTransformation["transform"] = matching.image_A.absoluteTransformation["transform"] @ matching.image_B.absoluteTransformation["transform"]
-        # # matching.image_B.relativeTransformation["projection"] = projection_from_transformation(matching.image_B.absoluteTransformation["transform"])
-
         assert CheckCoherentRotation(Rotation_Mat), "\tRotation Erreur in EstimatePose_from_2D2D_scale" 
         ''' set absolute Pose '''
         matching.image_B.setAbsolutePose(matching.image_A, Rotation_Mat, Transl_Vec)
@@ -68,7 +62,7 @@ class PoseEstimation:
     #############################################################
     def FindPoseEstimation_pnp(self, ppcloud, imgPoints, imgPoints_norm, cameraMatrix):
         #####################################################
-        ## Compute rotation and translation of camera 2    ##
+        ##  Compute rotation and translation of new image  ##
         ##      ''' Camera Matrix is mondatory '''         ##
         ## points undistort camera matrix == identity matrix##
         #####################################################
@@ -103,7 +97,7 @@ class PoseEstimation:
 
         ## if not outliers, solvepnpransac retourn none ##
         if inliers_index is None:
-            print("WTF !!!")
+            """ Not outliers --> create inliers index """
             inliers_index = np.array([i for i in range (len(ppcloud_))])
 
         reprojection_error = compute_reprojection_error_1(absolute_rVec, absolute_tVec, ppcloud_, imgPoints_Proj, cameraMatrix)
