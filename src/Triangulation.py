@@ -52,9 +52,12 @@ class Triangulation:
         index_to_Remove = np.argwhere((points3d[:, 2] < 0) | (points3d[:, 2] > MAX_DEPTH) )
 
         # Update inliers points
-        points3d           = np.delete(points3d              , index_to_Remove, axis=0)
-        matching.prec_pts  = np.delete(matching.prec_pts     , index_to_Remove, axis=0)
-        matching.curr_pts  = np.delete(matching.curr_pts     , index_to_Remove, axis=0)
+        points3d                = np.delete(points3d              , index_to_Remove, axis=0).reshape(-1, 3)
+        matching.prec_pts       = np.delete(matching.prec_pts     , index_to_Remove, axis=0).reshape(-1, 2)
+        matching.prec_pts_norm  = np.delete(matching.prec_pts_norm, index_to_Remove, axis=0).reshape(-1, 2)
+        matching.curr_pts       = np.delete(matching.curr_pts     , index_to_Remove, axis=0).reshape(-1, 2)
+        matching.curr_pts_norm  = np.delete(matching.curr_pts_norm, index_to_Remove, axis=0).reshape(-1, 2)
+
 
         """ Reprojection Error Image A"""
         reprojection_error_A = compute_reprojection_error_2(matching.image_A.absoluteTransformation["transform"], points3d, matching.prec_pts, matching.image_A.cameraMatrix)

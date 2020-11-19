@@ -14,7 +14,7 @@ class FundamentalMatrix:
 
         NB_Matching_Threshold = 8
         if len(src_pts) < NB_Matching_Threshold:
-            return None, None
+            return None
         _, maskInliers = cv.findFundamentalMat(src_pts, dst_pts, method = self.methodOptimizer, ransacReprojThreshold = self.ransacReprojThreshold)
 
         # draw_params = dict(matchColor = (0,255,0), # draw matches in green color

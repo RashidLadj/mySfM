@@ -9,6 +9,7 @@ class Image_:
         # Initialize a number of global variables
         self.path      = str(pathFolder + fileName)
         self.id        = fileName.split(".")[0]
+        self.BA_id     = None
         self.imageRGB  = self.readImage(maxWH)
         self.imageGray = cv.cvtColor(self.imageRGB, cv.COLOR_BGR2GRAY)
         self.image_height, self.image_width = self.imageRGB.shape[:2]
@@ -21,8 +22,9 @@ class Image_:
         self.absoluteTransformation = {}
 
         # used in Point_Cloud
-        self.points_2D_used  = np.empty([0, 2])
-        self.points_3D_used  = np.empty([0, 3])
+        self.points_2D_used       = np.empty([0, 2])
+        self.points_2D_norm_used  = np.empty([0, 2])
+        self.points_3D_used       = np.empty([0, 3])
 
 
     ###################################################################

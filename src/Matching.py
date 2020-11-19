@@ -124,12 +124,13 @@ class Matching:
         self.update_inliers_mask()   
         # # Take just inliers for triangulation
         p_cloud  = Triangulation().Triangulate(self)
-
-        self.image_A.points_2D_used  = np.append(self.image_A.points_2D_used, self.prec_pts  , axis = 0)
-        self.image_A.points_3D_used  = np.append(self.image_A.points_3D_used, p_cloud        , axis = 0)
+        self.image_A.points_2D_norm_used  = np.append(self.image_A.points_2D_norm_used, self.prec_pts_norm  , axis = 0)
+        self.image_A.points_2D_used       = np.append(self.image_A.points_2D_used,      self.prec_pts       , axis = 0)
+        self.image_A.points_3D_used       = np.append(self.image_A.points_3D_used,      p_cloud             , axis = 0)
     
-        self.image_B.points_2D_used  = np.append(self.image_B.points_2D_used, self.curr_pts  , axis = 0)
-        self.image_B.points_3D_used  = np.append(self.image_B.points_3D_used, p_cloud        , axis = 0)
+        self.image_B.points_2D_norm_used  = np.append(self.image_B.points_2D_norm_used, self.curr_pts_norm  , axis = 0)
+        self.image_B.points_2D_used       = np.append(self.image_B.points_2D_used,      self.curr_pts       , axis = 0)
+        self.image_B.points_3D_used       = np.append(self.image_B.points_3D_used,      p_cloud             , axis = 0)
         
         print("\tnumber of 3D-point image_A is ", len(self.image_A.points_2D_used), "and image B is ", len(self.image_B.points_2D_used))
 
