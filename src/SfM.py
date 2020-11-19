@@ -1,6 +1,7 @@
 ###########################################################
 ##               Author : Rachid LADJOUZI                ##
 ###########################################################
+
 from os import listdir
 import os.path
 from os import path
@@ -191,11 +192,18 @@ class SfM:
                             continue
                         inliers_Number, Rot, transl, mask_inliers = Result
 
+                        """ Remove outliers of PnP Ransac """
+                        inter_3d_pts      = np.asarray(inter_3d_pts)     [mask_inliers.ravel() > 0].reshape(-1, 3)
+                        inter_2d_pts      = np.asarray(inter_2d_pts)     [mask_inliers.ravel() > 0].reshape(-1, 2)
+                        inter_2d_pts_norm = np.asarray(inter_2d_pts_norm)[mask_inliers.ravel() > 0].reshape(-1, 2)
+
+                        """ Add inlier informations of PnP Ransac to the newest image """
+                        matching_AB.image_B.points_3D_used       = np.append(matching_AB.image_B.points_3D_used,      inter_3d_pts,      axis = 0)
+                        matching_AB.image_B.points_2D_used       = np.append(matching_AB.image_B.points_2D_used,      inter_2d_pts,      axis = 0)
+                        matching_AB.image_B.points_2D_norm_used  = np.append(matching_AB.image_B.points_2D_norm_used, inter_2d_pts_norm, axis = 0)
+        
                         """Set camera pose of new image"""
                         matching_AB.image_B.setAbsolutePose(None, Rot, transl)
-
-                        matching_AB.image_B.points_3D_used  = np.append(matching_AB.image_B.points_3D_used, inter_3d_pts, axis = 0)
-                        matching_AB.image_B.points_2D_used  = np.append(matching_AB.image_B.points_2D_used, inter_2d_pts, axis = 0)
                         
                         print("\tTriangulate with all images")
                         matching_AB.generate_landmarks()
@@ -217,13 +225,20 @@ class SfM:
                         # pas interesant la nouvelle image
                         return
                     inliers_Number, Rot, transl, mask_inliers = Result
+
+                    """ Remove outliers of PnP Ransac """
+                    inter_3d_pts      = np.asarray(inter_3d_pts)     [mask_inliers.ravel() > 0].reshape(-1, 3)
+                    inter_2d_pts      = np.asarray(inter_2d_pts)     [mask_inliers.ravel() > 0].reshape(-1, 2)
+                    inter_2d_pts_norm = np.asarray(inter_2d_pts_norm)[mask_inliers.ravel() > 0].reshape(-1, 2)
+
+                    """ Add inlier informations of PnP Ransac to the newest image """
+                    matching_vector[0].image_B.points_3D_used       = np.append(matching_vector[0].image_B.points_3D_used,      inter_3d_pts,      axis = 0)
+                    matching_vector[0].image_B.points_2D_used       = np.append(matching_vector[0].image_B.points_2D_used,      inter_2d_pts,      axis = 0)
+                    matching_vector[0].image_B.points_2D_norm_used  = np.append(matching_vector[0].image_B.points_2D_norm_used, inter_2d_pts_norm, axis = 0)
                     
                     """Set camera pose of new image"""
                     matching_vector[0].image_B.setAbsolutePose(None, Rot, transl)
-                    
-                    matching_vector[0].image_B.points_3D_used  = np.append(matching_vector[0].image_B.points_3D_used, inter_3d_pts, axis = 0)
-                    matching_vector[0].image_B.points_2D_used  = np.append(matching_vector[0].image_B.points_2D_used, inter_2d_pts, axis = 0)
-                        
+
                     print("\tTriangulate with all images")
                     [matching_AB.generate_landmarks() for index_matching, matching_AB in enumerate(matching_vector) if mask[index_matching]]
 
@@ -232,10 +247,6 @@ class SfM:
 
 
     def __points_to_pnp_singal(self, matching_AB):
-        pts_cloud_for_pnp     = np.empty([0, 3])
-        pts_curr_for_pnp      = np.empty([0, 2])
-        ptd_curr_norm_for_pnp = np.empty([0, 2])
-
         ''' Intersection 3D 2D '''
         Result = matching_AB.retrieve_existing_points()
         """ pas assez de points """
@@ -269,7 +280,6 @@ class SfM:
 
             for idx in range (len(inter_3d_pts)):
                 if (inter_3d_pts[idx] in pts_cloud_for_pnp and inter_2d_pts[idx] in pts_curr_for_pnp and inter_2d_pts_norm[idx] in ptd_curr_norm_for_pnp ):
-                    # print ("exsiste deja ==>[{} , {} , {}]".format(matching_AB.inter_pts_3D_PnP[idx] in pts_cloud_for_pnp, matching_AB.curr_pts_B_2D_PnP[idx] in pts_curr_for_pnp, matching_AB.curr_pts_B_norm_PnP[idx] in ptd_curr_norm_for_pnp)  )
                     continue
                 else:
                     pts_cloud_for_pnp     = np.append(pts_cloud_for_pnp     , [inter_3d_pts[idx]]     , axis = 0)
@@ -331,13 +341,12 @@ class SfM:
             # /***************************************************************/
             # /** ''' Retrieve best candidate pair for incremetal phase ''' **/
             # /***************************************************************/
-            
-            """ recuprer les pair d'image ou une des deux images à déja été utilisée """
+            """ Recuprer la pair d'image où une des deux images à déja été utilisée """
+            print("\timage {} --> number total matches homography {}".format(new_image.id, nb_matches_homog))
             [ self.matches_vector.remove(x) for x in (self.matches_vector) if ((x.image_A in self.last_images) and (x.image_B in self.last_images)) ]
 
             if len(self.matches_vector) == 0:
-                #Normalement on y entre pas
-                print(" ------- Bug a corriger !!! ------- ")
+                # il faut améliorer l'algo
                 return None
                 
             # /** ^ == XOR **/
