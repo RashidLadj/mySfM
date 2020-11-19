@@ -21,6 +21,7 @@ from FundamentalMatEstimation import *
 from EssentialMatEstimation import *
 from PoseEstimation import *
 from P_cloud import *
+from Bundle_Adjustment import *
 
 import copy
 
@@ -382,6 +383,7 @@ class SfM:
         done = time.time()
         elapsed = done - start
         print("elapsed time ... {}".format(elapsed))
+        Bundle_Adjustment(pp_cloud)
 
 
     # /****************************************************************/
@@ -395,7 +397,7 @@ class SfM:
         print ("\n- Number of 3D points of 3D-reconstruction generated with SfM is  ",len(p_cloud), "points")
 
         """  Save point-cloud in ply file  """
-        pts2ply(p_cloud, filename = "src/point_cloud.ply")
+        pts2ply(p_cloud, filename = "point_cloud.ply")
         
         """ Config viewer """
         vis = o3d.visualization.Visualizer()

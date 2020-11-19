@@ -21,7 +21,7 @@ class P_cloud:
         self.images_list = images_list
         self.__config()
         self.khra = 0
-        self.generate_file()
+        # self.generate_file()
 
     
     def __config(self):
