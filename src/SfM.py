@@ -19,8 +19,8 @@ from Matching import *
 from HomographyMatEstimation import *
 from FundamentalMatEstimation import *
 from EssentialMatEstimation import *
-
 from PoseEstimation import *
+from P_cloud import *
 
 import copy
 
@@ -373,6 +373,15 @@ class SfM:
         if not configuration["pnpsolver_method"]:
             print("Not implemented yet")
             return None
+
+
+    def save_data_for_BA(self):
+        import time
+        start = time.time()
+        pp_cloud = P_cloud(self.last_images)
+        done = time.time()
+        elapsed = done - start
+        print("elapsed time ... {}".format(elapsed))
 
 
     # /****************************************************************/
