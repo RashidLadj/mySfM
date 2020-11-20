@@ -113,6 +113,21 @@ class Bundle_Adjustment:
         """  Launch Visualisation  """
         vis.run()
 
+    
+    def update_data(self, res_x, n_cameras):
+        camera_params = res_x[:n_cameras*6].reshape(-1, 6)
+        for i, image in enumerate(self.p_cloud.images_list):
+            """ Retrieve Absolute Transformation of current image """
+            Rt, _ = cv.Rodrigues(camera_params[i, :3])
+            R     = Rt.T
+            t     = - R @ camera_params[i, 3:6]
+            image.setAbsolutePose(None, R, t)
+
+        pointcloud = res_x[n_cameras*6:].reshape(-1, 3)
+        for i, landmark in enumerate (self.p_cloud.landmarks):
+            landmark.set_pos_3D(pointcloud[i])
+
+
     # /***************************************************************/
     # /** Retrieve data from the file and split them into variables **/
     # /***************************************************************/
@@ -164,4 +179,6 @@ class Bundle_Adjustment:
         camera_params = res.x[:n_cameras*6].reshape(-1, 6)
         pointcloud = res.x[n_cameras*6:].reshape(-1, 3)
 
-        self.draw_pcloud(camera_params, pointcloud)
+        self.update_data(res.x, n_cameras)
+
+        # self.draw_pcloud(camera_params, pointcloud)

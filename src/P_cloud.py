@@ -13,6 +13,13 @@ class Landmark:
         self.images.append(image)
         self.pos_2D.append(pos_2D)
 
+    def set_pos_3D(self, pos_3D):
+        self.pos_3D = list(pos_3D)
+
+        for i, image in enumerate(self.images):
+            idx = (image.points_2D_used.tolist()).index(self.pos_2D[i].tolist())   
+            image.points_3D_used[idx] = list(pos_3D)       
+
 
 class P_cloud:
     def __init__(self, images_list):
@@ -20,7 +27,6 @@ class P_cloud:
         self.id_pt_3D = 0
         self.images_list = images_list
         self.__config()
-        self.khra = 0
         # self.generate_file()
 
     
