@@ -3,11 +3,11 @@
 ### Dependencies
 mySfM requires python 3.6 or 3.7 
 
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
 
 or
 
-    pip Setup.py install
+    python3 Setup.py install
 
 ### Usage
 
