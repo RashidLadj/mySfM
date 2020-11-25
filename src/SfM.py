@@ -67,6 +67,7 @@ class SfM:
     
     def loadData(self):
         assert path.exists(self.ImageFolder), 'veuillez verifier le chemin du Folder'
+
         images_name = sorted([file for file in listdir(self.ImageFolder) if file.endswith(".jpg") or file.endswith(".JPG") or file.endswith(".PNG") or file.endswith(".png")])
 
 
@@ -246,6 +247,7 @@ class SfM:
                     self.last_images.append(matching_vector[0].image_B)
                     self.remaining_images.remove(matching_vector[0].image_B)
 
+        
 
     def __points_to_pnp_singal(self, matching_AB):
         ''' Intersection 3D 2D '''
@@ -400,8 +402,10 @@ class SfM:
         pts2ply(p_cloud, filename = "point_cloud.ply")
         
         """ Config viewer """
+        directoryPath = os.getcwd()
         vis = o3d.visualization.Visualizer()
         vis.create_window("Structure_from_Motion", 1280, 720)
+        os.chdir(directoryPath)
 
         """  Add Camera-pose of images to viewer """
         scale = 0.5
