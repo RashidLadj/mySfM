@@ -5,7 +5,7 @@ from config import *
 
 
 class HomographyMatrix:
-    def __init__(self, methodOptimizer = cv.FM_RANSAC, ransacReprojThreshold = 2.0):
+    def __init__(self, methodOptimizer = cv.RANSAC, ransacReprojThreshold = 2.0):
         ## /** 0(None), 4(cv.LMEDS), (8)RANSAC, 16(RHO) **/ ##
         self.methodOptimizer = methodOptimizer
         self.ransacReprojThreshold = ransacReprojThreshold
