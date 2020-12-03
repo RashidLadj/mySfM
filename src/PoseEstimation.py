@@ -48,7 +48,7 @@ class PoseEstimation:
         else:
             inliers_count, Rotation_Mat, Transl_Vec, mask_inliers = cv.recoverPose(EssentialMatrix.EssentialMat, matching.curr_pts, matching.prec_pts, cameraMatrix = matching.image_A.cameraMatrix, mask = matching.inliers_mask)
         
-        assert CheckCoherentRotation(Rotation_Mat), "\tRotation Erreur in EstimatePose_from_2D2D_scale" 
+        assert CheckCoherentRotation(Rotation_Mat), "\tRotation Error in EstimatePose_from_2D2D_scale" 
         ''' set absolute Pose '''
         matching.image_B.setAbsolutePose(matching.image_A, Rotation_Mat, Transl_Vec)
         matching.image_B.absoluteTransformation["transform"] = matching.image_A.absoluteTransformation["transform"] @ matching.image_B.absoluteTransformation["transform"]

@@ -52,9 +52,9 @@ class Image_:
         self.keyPoints, self.des = detector.detectAndCompute(self.imageGray,None)
         
     
-    ######################################################################################
-    ## ''' Redimentionner l'image en gardant le Ratio , Choix du Width ou du Height ''' ##
-    ######################################################################################
+    #############################################################
+    ## ''' Resize the input image keeping the aspect ratio ''' ##
+    #############################################################
     def __image_resize(self, image, width = None, height = None, inter = cv.INTER_AREA):
         # initialize the dimensions of the image to be resized and
         # grab the image size

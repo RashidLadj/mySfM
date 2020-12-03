@@ -15,7 +15,7 @@ class EssentialMatrix:
     def __init__(self, methodOptimizer = cv.RANSAC, threshold = 3.0):
         self.methodOptimizer = methodOptimizer
         self.threshold = threshold 
-        ## If Two Cameras are used : -> Undistore points --> k= Identity ##
+        ## If Two Cameras are used : -> Undistord points --> k= Identity ##
 
 
     #####################################################################

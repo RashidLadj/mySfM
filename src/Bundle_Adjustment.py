@@ -161,7 +161,7 @@ class Bundle_Adjustment:
         # plt.show()
 
 
-        """Constrcution d'une matrice binaire représentant la matric jacobienne pour least_square """
+        """Build a Jacobian binary matrix for the least_squares method"""
         A = self.bundle_adjustment_sparsity(n_cameras, n_points, camera_indices, point_indices)
         import time
         from scipy.optimize import least_squares

@@ -66,7 +66,7 @@ class SfM:
 
     
     def loadData(self):
-        assert path.exists(self.ImageFolder), 'veuillez verifier le chemin du Folder'
+        assert path.exists(self.ImageFolder), 'Please, verify the folder path'
 
         images_name = sorted([file for file in listdir(self.ImageFolder) if file.endswith(".jpg") or file.endswith(".JPG") or file.endswith(".PNG") or file.endswith(".png")])
 
@@ -91,9 +91,9 @@ class SfM:
             
 
         ###########################################################
-        ##  ''' Compute Matching beetwin each pair of image '''  ##
+        ##  ''' Compute Matching between each pair of image '''  ##
         ###########################################################
-        print ("\nMatching points beetwin each pair of image")
+        print ("\nMatching points between each pair of image")
 
         image_Pair = list(itertools.combinations(self.remaining_images, 2))
 
@@ -132,9 +132,9 @@ class SfM:
 
         ################################################################
         ##           ''' Compute Transformation Matrix '''            ##
-        ##      ''' Triangulation and Initialize point-Cloud '''      ##
+        ##      ''' Triangulation and Initialize point-cloud '''      ##
         ################################################################
-        print ("\tCompute transformation and initialize point-Cloud")
+        print ("\tCompute transformation and initialize point-cloud")
 
         ''' Estimate Pose '''
         cameraPose = PoseEstimation()
@@ -165,7 +165,7 @@ class SfM:
            
             ################################################################
             ##       ''' Compute Transformation Matrix using PNP '''      ##
-            ##       ''' Triangulation and increment point-Cloud '''      ##
+            ##       ''' Triangulation and increment point-cloud '''      ##
             ################################################################
 
             if not(matching_vector == None):
@@ -182,7 +182,7 @@ class SfM:
                         matching_AB.update_inliers_mask()
                         Result= self.__points_to_pnp_singal(matching_AB)
                         if Result is None:
-                            ## Boucle à l'infinie dans ce cas là, il faut trouver une solution
+                            ## TODO: Fix the infinite loop
                             continue
                     
                         inter_3d_pts, inter_2d_pts, inter_2d_pts_norm = Result
@@ -190,7 +190,7 @@ class SfM:
                         print ("\tresection using pnp")
                         Result = self.__estimateCameraPose_pnp(inter_3d_pts, inter_2d_pts, inter_2d_pts_norm, matching_AB.image_B.cameraMatrix)
                         if Result is None: 
-                            # pas interesant la nouvelle image
+                            # new image is not helpful
                             continue
                         inliers_Number, Rot, transl, mask_inliers = Result
 
@@ -233,7 +233,7 @@ class SfM:
                     inter_2d_pts      = np.asarray(inter_2d_pts)     [mask_inliers.ravel() > 0].reshape(-1, 2)
                     inter_2d_pts_norm = np.asarray(inter_2d_pts_norm)[mask_inliers.ravel() > 0].reshape(-1, 2)
 
-                    """ Add inlier informations of PnP Ransac to the newest image """
+                    """ Add inlier information of PnP Ransac to the newest image """
                     matching_vector[0].image_B.points_3D_used       = np.append(matching_vector[0].image_B.points_3D_used,      inter_3d_pts,      axis = 0)
                     matching_vector[0].image_B.points_2D_used       = np.append(matching_vector[0].image_B.points_2D_used,      inter_2d_pts,      axis = 0)
                     matching_vector[0].image_B.points_2D_norm_used  = np.append(matching_vector[0].image_B.points_2D_norm_used, inter_2d_pts_norm, axis = 0)
@@ -252,7 +252,7 @@ class SfM:
     def __points_to_pnp_singal(self, matching_AB):
         ''' Intersection 3D 2D '''
         Result = matching_AB.retrieve_existing_points()
-        """ pas assez de points """
+        """ not enough points """
         if Result is None: 
             return  
 
@@ -271,9 +271,9 @@ class SfM:
         for index_match, matching_AB in enumerate(matching_vector):
             ''' Intersection 3D 2D '''
             Result = matching_AB.retrieve_existing_points()
-            """ pas assez de points """
+            """ not enough points """
             if Result is None: 
-                """ remove it : pour ne aps le prendre en cosideration lors de la triangulation """
+                """ remove it : do not take it into account for triangulation """
                 # matching_vector.remove(matching_AB)
                 mask[index_match] = 0
                 continue 
@@ -311,7 +311,7 @@ class SfM:
 
             print("\n\t/************************** Choose best new image *****************************/")
             # /** ^ == XOR **/
-            """ Recuperer la meilleures images qui partagent le plus de matches ( avec le mask d'homography) avec l'une des images qui a été deja été utilisée """
+            """ Retrieve the best image (using the number of matches from the homography mask) among the ones already used """
             matches_vector = [x for x in self.matches_vector if ((x.image_A in self.last_images) ^ (x.image_B in self.last_images))]
             my_dict = {}
             for new_image in self.remaining_images:
@@ -344,7 +344,7 @@ class SfM:
             # /***************************************************************/
             # /** ''' Retrieve best candidate pair for incremetal phase ''' **/
             # /***************************************************************/
-            """ Recuprer la pair d'image où une des deux images à déja été utilisée """
+            """ Retrieve a pair of images which one of them is already used """
             print("\timage {} --> number total matches homography {}".format(new_image.id, nb_matches_homog))
             [ self.matches_vector.remove(x) for x in (self.matches_vector) if ((x.image_A in self.last_images) and (x.image_B in self.last_images)) ]
 
@@ -353,11 +353,11 @@ class SfM:
                 return None
                 
             # /** ^ == XOR **/
-            """ Recuperer la meilleures images qui partagent le plus de matches ( avec l'homography ) avec l'une des images qui a été deja été utilisée """
+            """ Retrieve the best image (using the number of matches from the homography mask) among the ones already used """
             matches_vector = [x for x in self.matches_vector if ((x.image_A in self.last_images) ^ (x.image_B in self.last_images))]
 
             if len(matches_vector) == 0:
-                print("\nles deux images on déjà été traité !!!")
+                print("\nBoth images have already been processed !!!")
                 return None
            
             index_candidate_pair = np.argmax([x.homog_mask_len for x in matches_vector])
@@ -418,7 +418,7 @@ class SfM:
                 vis.add_geometry(mesh_img_i)
                 vis.add_geometry(id_ref_imd_id)
 
-        """  Add point-Cloud of 3D-reconstruction to viewer """
+        """  Add point-cloud of 3D-reconstruction to viewer """
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(np.array(p_cloud).reshape(-1, 3))
 

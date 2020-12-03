@@ -59,7 +59,7 @@ class Reloc:
         ###########################################################
         ##                  ''' Create Images '''                ##
         ###########################################################
-        print ("\nRead images (Relov)")
+        print ("\nRead images (Reloc)")
         self.remaining_images = []
         for image in images_name:
             self.remaining_images.append(Image_(self.ImageFolder, image, configuration["feature_process_size"], copy.deepcopy(self.cameraParams)))
@@ -75,9 +75,9 @@ class Reloc:
             
 
         ###########################################################
-        ##  ''' Compute Matching beetwin each pair of image '''  ##
+        ##  ''' Compute Matching between each pair of image '''  ##
         ###########################################################
-        print ("\nMatching points beetwin each pair of image")
+        print ("\nMatching points between each pair of image")
 
         for image_A in self.remaining_images:
             matches_vector = []
@@ -96,7 +96,7 @@ class Reloc:
     def __computePose(self, matches_vector):
         ################################################################
         ##       ''' Compute Transformation Matrix using PNP '''      ##
-        ##       ''' Triangulation and increment point-Cloud '''      ##
+        ##       ''' Triangulation and increment point-cloud '''      ##
         ################################################################
 
         matching_vector = self.__best_match(matches_vector)
@@ -154,7 +154,7 @@ class Reloc:
     def __points_to_pnp_singal(self, matching_AB):
         ''' Intersection 3D 2D '''
         Result = matching_AB.retrieve_existing_points()
-        """ pas assez de points """
+        """ Not enough points """
         if Result is None: 
             return  
 
@@ -172,9 +172,9 @@ class Reloc:
         for index_match, matching_AB in enumerate(matching_vector):
             ''' Intersection 3D 2D '''
             Result = matching_AB.retrieve_existing_points()
-            """ pas assez de points """
+            """ not enough points """
             if Result is None: 
-                """ remove it : pour ne aps le prendre en cosideration lors de la triangulation """
+                """ remove it : do not take it into account for triangulation """
                 mask[index_match] = 0
                 continue 
             inter_3d_pts, inter_2d_pts, inter_2d_pts_norm = Result
@@ -213,7 +213,7 @@ class Reloc:
             # /***************************************************************/
             # /** ''' Retrieve best candidate pair for incremetal phase ''' **/
             # /***************************************************************/
-            """ Recuprer la pair d'image où une des deux images à déja été utilisée """
+            """ Retrieve a pair of images which one of them is already used """
             print("\timage {} --> number total matches homography {}".format(new_image.id, nb_matches_homog))
            
             index_candidate_pair = np.argmax([x.homog_mask_len for x in matches_vector])
@@ -261,7 +261,7 @@ class Reloc:
                 vis.add_geometry(mesh_img_i)
                 vis.add_geometry(id_ref_imd_id)
 
-        """  Add point-Cloud of 3D-reconstruction to viewer """
+        """  Add point-cloud of 3D-reconstruction to viewer """
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(np.array(p_cloud).reshape(-1, 3))
 

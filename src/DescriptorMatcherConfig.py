@@ -6,11 +6,6 @@ import cv2
   *  as well as the Matching method (FlannBasedMatcher, BruteForceMatcher).
   *  Ps: In the case of CrossCheck == True, only Matcher.match Works 
   **/
-
-  /** Cette Methode Permet de configurer le system en choisissant la methode de detection de points d'interet (Sift, Surf, ORB), 
-  *  ainsi que la methode de Matching (FlannBasedMatcher, BruteForceMatcher)
-  *  Ps: Dans le cas du CrossCheck == True, seul Matcher.match Fonctionne 
-  **/
 '''
 
 def keyPointDetectorAndMatchingParams(keyPointDetectorMethod, matcherMethod, crosscheck = False, Max_keyPoint = 500):
@@ -32,7 +27,7 @@ def keyPointDetectorAndMatchingParams(keyPointDetectorMethod, matcherMethod, cro
 
     elif keyPointDetectorMethod.lower() == 'surf':
         # if is_CV2():
-        #   assert 1==0 , "Introduire SURF de OpenCV2"
+        #   assert 1==0 , "Add SURF from OpenCV2"
 
         if is_CV3():
             detector = cv.features2d.SURF_create()
@@ -40,7 +35,7 @@ def keyPointDetectorAndMatchingParams(keyPointDetectorMethod, matcherMethod, cro
 
         if is_CV4():
             detector = None
-            assert 1==0 , "SURF ne marche pas sur OpenCV4"
+            assert 1==0 , "SURF does not work in OpenCV4"
 
         norm = cv.NORM_L2
 
@@ -58,7 +53,7 @@ def keyPointDetectorAndMatchingParams(keyPointDetectorMethod, matcherMethod, cro
           detector = cv.AKAZE_create()
           
         # if is_CV2():
-        #   assert 1==0 , "Introduire Akaze de OpenCV2"
+        #   assert 1==0 , "Add Akaze from OpenCV2"
 
         norm = cv.NORM_HAMMING
 
@@ -78,7 +73,7 @@ def keyPointDetectorAndMatchingParams(keyPointDetectorMethod, matcherMethod, cro
                                key_size = 12,         # 20
                                multi_probe_level = 1) #2
         
-        matcher = cv.FlannBasedMatcher(flann_params, dict(checks = 32))  # bug : need to pass empty dict (#1329)
+        matcher = cv.FlannBasedMatcher(flann_params, dict(checks = 32))  # bug: need to pass empty dict (#1329)
 
     else:
         matcher = cv.BFMatcher(normType = norm, crossCheck = crosscheck)
@@ -200,7 +195,7 @@ class MatchingConfig:
         # Sort them in the order of their distance.
         intersectionMatches = sorted(intersectionMatches, key = lambda x: x.distance)   
 
-        # take just 2/3 ?? (A revoir)
+        # take just 2/3 ?? (TODO)
         # matches = sorted(matches, key = lambda x:x.distance)
 
         goodInter = intersectionMatches.copy()
@@ -218,7 +213,7 @@ class MatchingConfig:
     ####################################################################
     def __MatchingUnion(self, image_A, image_B):
         if self.crosscheck:
-                # Methode One
+                # Method One
             ''' Match Img A to img B '''
             matches_AB = self.matcher.match(image_A.des, image_B.des)
             
@@ -226,7 +221,7 @@ class MatchingConfig:
             matches_BA = self.matcher.match(image_B.des, image_A.des)
 
         else:
-            # Methode Two
+            # Method Two
             ''' Match Img A to img B '''
             matches_AB = self.matcher.knnMatch(image_A.des, image_B.des, k=2)
 
@@ -260,7 +255,7 @@ class MatchingConfig:
             for item in unionMatches:
                 if self.__areEqual(item, itemBA) :
                     exist = True
-                break   # Je n'ai pas trouvé un autre moyen de faire la comparaison
+                break   # I did not find another method to compare
             if not exist:
                 unionMatches.append(itemBA)
 

@@ -53,7 +53,7 @@ class Matching:
 
         ''' Compute Essential matrix '''
         self.essentialMatrix_inliers(Essentialmat)
-        print ("\tMatching points beetwin {} and {} : Nb Matches (No optimize) == {} , Nb Matches_Fund == {}, Nb matches_Essen == {}".format(self.image_A.id, self.image_B.id, len(self.matches), nb_matches_fund, sum(self.inliers_mask)))
+        print ("\tMatching points between {} and {} : Nb Matches (No optimize) == {} , Nb Matches_Fund == {}, Nb matches_Essen == {}".format(self.image_A.id, self.image_B.id, len(self.matches), nb_matches_fund, sum(self.inliers_mask)))
     
     def fundamentalMatrix_inliers(self, Fundamentalmat):
         if configuration["enable_fundamentalMat"]:
@@ -66,7 +66,7 @@ class Matching:
     def homographyMatrix_inliers(self, Homographymat):
         Homog_mask = Homographymat.compute_HomographyMatrix(self.curr_pts, self.prec_pts, self.image_B, self.image_A, self.matches)  
         self.homog_mask_len = np.sum(Homog_mask)
-        print ("\tMatching points beetwin {} and {} : Nb Matches (No optimize) == {} , Nb Matches (Homography) == {} ".format(self.image_A.id, self.image_B.id, len(self.matches), self.homog_mask_len))
+        print ("\tMatching points between {} and {} : Nb Matches (No optimize) == {} , Nb Matches (Homography) == {} ".format(self.image_A.id, self.image_B.id, len(self.matches), self.homog_mask_len))
 
 
     def essentialMatrix_inliers(self, Essentialmat):
@@ -96,7 +96,7 @@ class Matching:
         print("\tcompute intersection between ", len(self.image_A.points_2D_used), " and", len(self.prec_pts), "points for projection")
         _, index_A, self.index_toRemove_forTriangulate = intersect2D(np.asarray(self.image_A.points_2D_used), np.asarray(self.prec_pts)) 
         if (len(index_A) < 7): 
-            print ("\t Pas assez de points !!!")
+            print ("\t Not enough points !!!")
             return    ## to Verify
         """ Retrieve points for solver (inter_3d_pts & inter_curr_pts) """
         inter_3d_pts       = np.asarray(self.image_A.points_3D_used) [index_A, :].reshape(-1, 3)
