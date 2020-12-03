@@ -18,18 +18,18 @@ or
     python3 src/myProgram.py
 
 This command:
-- starts the cloud point reconstruction of `img/Saint_Roch_new/data` dataset,
-- find pose of new images from `img/Saint_Roch_new/Reloc` uses relocalisation.
+- starts the cloud point reconstruction of `datasets/Saint_Roch_new/data` dataset,
+- find pose of new images from `datasets/Saint_Roch_new/reloc` uses relocalisation.
 
 # Use your own dataset
 
 ## 3D point cloud construction
 
 - Modify the path of `self.ImageFolder` in [src/SfM.py](src/SfM.py) with your own path.  
-- Include a *.yaml file in your dataset folder which contains the camera intrinsic parameters. An example is given in [img/Saint_Roch_new/data/camera_Samsung_s7.yaml]
+- Include a *.yaml file in your dataset folder which contains the camera intrinsic parameters. An example is given in [datasets/Saint_Roch_new/data/camera_Samsung_s7.yaml]
 
 ## Relocalisation
 
 - Modify the path of `self.ImageFolder` in [src/Reloc.py](src/Reloc.py) with your own path.  
-- Include a *.yaml file in your dataset folder which contains the camera intrinsic parameters. An example is given in [img/Saint_Roch_new/data/camera_Samsung_s7.yaml]
+- Include a *.yaml file in your dataset folder which contains the camera intrinsic parameters. An example is given in [datasets/Saint_Roch_new/data/camera_Samsung_s7.yaml]
 

@@ -48,7 +48,7 @@ class Reloc:
         ##        ''' Load Camera Matrix and update it '''       ##
         ##          ''' Load distortion coefficients '''         ##
         ###########################################################
-        self.ImageFolder = "img/Saint_Roch_new/Reloc/"
+        self.ImageFolder = "datasets/Saint_Roch_new/reloc/"
         self.cameraParams = load_cameraParams(self.ImageFolder+"camera_Samsung_s7.yaml")
 
     
