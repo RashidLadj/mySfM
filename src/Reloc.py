@@ -53,7 +53,7 @@ class Reloc:
 
     
     def loadData(self):
-        assert path.exists(self.ImageFolder), 'veuillez verifier le chemin du Folder'
+        assert path.exists(self.ImageFolder), 'Please, verify the folder path'
         images_name = sorted([file for file in os.listdir(self.ImageFolder) if file.endswith(".jpg") or file.endswith(".JPG") or file.endswith(".PNG") or file.endswith(".png")])
 
         ###########################################################
