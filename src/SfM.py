@@ -60,8 +60,8 @@ class SfM:
         ##        ''' Load Camera Matrix and update it '''       ##
         ##          ''' Load distortion coefficients '''         ##
         ###########################################################
-        self.ImageFolder = "Imgs/Saint_Roch_new/data/"
-        # self.ImageFolder = "Imgs/Aguesseau/data/"
+        self.ImageFolder = "img/Saint_Roch_new/data/"
+        # self.ImageFolder = "img/Aguesseau/data/"
         self.cameraParams = load_cameraParams(self.ImageFolder+"camera_Samsung_s7.yaml")
 
     
